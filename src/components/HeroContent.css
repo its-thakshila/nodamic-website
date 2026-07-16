@@ -1,0 +1,353 @@
+/* ── HeroContent Styles ───────────────────────────────────────── */
+.hero-content-root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  /* Above NodeCanvas (z-index 10) */
+  pointer-events: none;
+  /* Let clicks pass through to NodeCanvas */
+  font-family: 'Space Grotesk', sans-serif;
+  color: white;
+  text-align: center;
+  margin-top: 200px;
+  /* Single parameter for vertical offset */
+}
+
+.hero-logo-wrapper {
+  position: relative;
+  width: 280px;
+  max-width: 80vw;
+  margin-bottom: 24px;
+  pointer-events: auto;
+  /* Re-enable pointer events so hover works */
+  cursor: default;
+}
+
+.hero-logo-base,
+.hero-logo-glitch {
+  width: 100%;
+  display: block;
+}
+
+.hero-logo-base {
+  opacity: 0;
+  /* Strong white glow: tight core + wide outer halo */
+  filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.7)) drop-shadow(0px 0px 24px rgba(255, 255, 255, 0.3));
+}
+
+.hero-content-root.visible .hero-logo-base {
+  opacity: 1;
+  transition: opacity 0.2s ease-in;
+}
+
+.hero-logo-glitch {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --- ENTRY GLITCH --- */
+.hero-content-root.visible .layer-1-entry {
+  left: 2px;
+  filter: drop-shadow(-4px 0 rgba(255, 255, 255, 0.9));
+  animation: glitch-anim-1 0.4s linear forwards;
+}
+
+.hero-content-root.visible .layer-2-entry {
+  left: -2px;
+  filter: drop-shadow(4px 0 rgba(200, 200, 200, 0.9));
+  animation: glitch-anim-2 0.4s linear forwards;
+}
+
+/* --- HOVER GLITCH --- */
+.layer-1-hover {
+  left: 2px;
+  filter: drop-shadow(-4px 0 rgba(255, 255, 255, 0.9));
+}
+
+.layer-2-hover {
+  left: -2px;
+  filter: drop-shadow(4px 0 rgba(200, 200, 200, 0.9));
+}
+
+.hero-content-root.visible .hero-logo-wrapper:hover .layer-1-hover {
+  animation: glitch-anim-1-hover 0.2s linear forwards;
+}
+
+.hero-content-root.visible .hero-logo-wrapper:hover .layer-2-hover {
+  animation: glitch-anim-2-hover 0.2s linear forwards;
+}
+
+@keyframes glitch-anim-1 {
+  0% {
+    opacity: 1;
+    clip-path: inset(20% 0 80% 0);
+  }
+
+  10% {
+    clip-path: inset(60% 0 10% 0);
+  }
+
+  20% {
+    clip-path: inset(10% 0 50% 0);
+  }
+
+  30% {
+    clip-path: inset(80% 0 5% 0);
+  }
+
+  40% {
+    clip-path: inset(30% 0 40% 0);
+  }
+
+  50% {
+    clip-path: inset(70% 0 20% 0);
+  }
+
+  60% {
+    clip-path: inset(10% 0 80% 0);
+  }
+
+  70% {
+    clip-path: inset(50% 0 30% 0);
+  }
+
+  80% {
+    clip-path: inset(20% 0 60% 0);
+  }
+
+  90% {
+    clip-path: inset(90% 0 0% 0);
+  }
+
+  95% {
+    opacity: 1;
+    clip-path: inset(10% 0 50% 0);
+  }
+
+  96% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes glitch-anim-2 {
+  0% {
+    opacity: 1;
+    clip-path: inset(10% 0 60% 0);
+  }
+
+  10% {
+    clip-path: inset(30% 0 20% 0);
+  }
+
+  20% {
+    clip-path: inset(80% 0 5% 0);
+  }
+
+  30% {
+    clip-path: inset(20% 0 40% 0);
+  }
+
+  40% {
+    clip-path: inset(90% 0 5% 0);
+  }
+
+  50% {
+    clip-path: inset(40% 0 30% 0);
+  }
+
+  60% {
+    clip-path: inset(60% 0 10% 0);
+  }
+
+  70% {
+    clip-path: inset(10% 0 50% 0);
+  }
+
+  80% {
+    clip-path: inset(80% 0 5% 0);
+  }
+
+  90% {
+    clip-path: inset(30% 0 40% 0);
+  }
+
+  95% {
+    opacity: 1;
+    clip-path: inset(40% 0 30% 0);
+  }
+
+  96% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+
+
+.hero-headline,
+.hero-subheadline {
+  opacity: 0;
+}
+
+.hero-content-root.visible .hero-headline,
+.hero-content-root.visible .hero-subheadline {
+  opacity: 1;
+}
+
+.hero-headline {
+  font-size: 2.2rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.hero-headline-highlight {
+  color: #a0a0a0;
+  font-weight: 500;
+}
+
+.hero-subheadline {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #c0c0c0;
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+/* Adjust layout based on screen height */
+@media (max-height: 800px) {
+  .hero-content-root {
+    margin-top: 80px;
+  }
+}
+
+@keyframes glitch-anim-1-hover {
+  0% {
+    opacity: 1;
+    clip-path: inset(20% 0 80% 0);
+  }
+
+  25% {
+    clip-path: inset(60% 0 10% 0);
+  }
+
+  50% {
+    clip-path: inset(10% 0 50% 0);
+  }
+
+  75% {
+    clip-path: inset(80% 0 5% 0);
+  }
+
+  96% {
+    opacity: 1;
+    clip-path: inset(30% 0 40% 0);
+  }
+
+  98% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes glitch-anim-2-hover {
+  0% {
+    opacity: 1;
+    clip-path: inset(10% 0 60% 0);
+  }
+
+  25% {
+    clip-path: inset(30% 0 20% 0);
+  }
+
+  50% {
+    clip-path: inset(80% 0 5% 0);
+  }
+
+  75% {
+    clip-path: inset(20% 0 40% 0);
+  }
+
+  96% {
+    opacity: 1;
+    clip-path: inset(90% 0 5% 0);
+  }
+
+  98% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── Responsive Design ────────────────────────────────────────── */
+
+/* Tablet & Mobile Landscape */
+@media (max-width: 768px) {
+  .hero-content-root {
+    margin-top: 140px;
+    padding: 0 24px;
+  }
+
+  .hero-logo-wrapper {
+    width: 220px;
+    margin-bottom: 20px;
+  }
+
+  .hero-headline {
+    font-size: 1.7rem;
+    margin-bottom: 10px;
+  }
+
+  .hero-subheadline {
+    font-size: 0.95rem;
+    max-width: 300px;
+  }
+}
+
+/* Mobile Portrait */
+@media (max-width: 480px) {
+  .hero-content-root {
+    margin-top: 100px;
+    padding: 0 16px;
+  }
+
+  .hero-logo-wrapper {
+    width: 180px;
+    margin-bottom: 16px;
+  }
+
+  .hero-headline {
+    font-size: 1.4rem;
+  }
+
+  .hero-subheadline {
+    font-size: 0.85rem;
+  }
+}
+
+/* Very Short Screens */
+@media (max-height: 600px) {
+  .hero-content-root {
+    margin-top: 60px;
+  }
+}

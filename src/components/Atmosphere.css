@@ -1,0 +1,60 @@
+/* ── Atmosphere Styles ───────────────────────────────────────── */
+@keyframes cinematicEntry {
+  0% {
+    filter: blur(50px) brightness(0.15);
+    transform: scale(1.18);
+  }
+
+  20% {
+    filter: blur(28px) brightness(0.35);
+    transform: scale(1.10);
+  }
+
+  55% {
+    filter: blur(8px) brightness(0.75);
+    transform: scale(1.04);
+  }
+
+  100% {
+    filter: blur(0px) brightness(1);
+    transform: scale(1);
+  }
+}
+
+.atmo-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.atmo-canvas-wrapper {
+  position: absolute;
+  inset: 0;
+  background: #0e0e0e;
+  filter: blur(50px) brightness(0.15);
+  transform: scale(1.18);
+  transform-origin: center center;
+}
+
+.atmo-canvas-wrapper.playing {
+  animation: cinematicEntry 4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* CSS radial blur overlay — blurs everything EXCEPT the center ellipse */
+.atmo-radial-blur-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  mask-image: radial-gradient(ellipse 50% 42% at 50% 35%, transparent 35%, black 100%);
+  -webkit-mask-image: radial-gradient(ellipse 50% 42% at 50% 35%, transparent 35%, black 100%);
+  pointer-events: none;
+}
+
+/* Strong bottom shadow */
+.atmo-bottom-shadow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(14, 14, 14, 0.92) 0%, rgba(14, 14, 14, 0.6) 25%, transparent 55%);
+  pointer-events: none;
+}

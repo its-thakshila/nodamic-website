@@ -1,0 +1,32 @@
+/* ── App shell ────────────────────────────────────────────────── */
+.app-root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.node-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: block;
+}
+
+/* ── Black scene overlay ── */
+/* Covers the terrain during loading and fades away at cinematic start,
+   so the user always sees the cinematic from its dramatic first frame. */
+.scene-overlay {
+  position: fixed;
+  inset: 0;
+  background: #0e0e0e;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scene-overlay.fading {
+  opacity: 0;
+}
