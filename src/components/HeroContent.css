@@ -320,7 +320,7 @@
 
   .hero-subheadline {
     font-size: 0.95rem;
-    max-width: 300px;
+    max-width: 400px;
   }
 }
 
@@ -342,6 +342,7 @@
 
   .hero-subheadline {
     font-size: 0.85rem;
+    max-width: 300px;
   }
 }
 
