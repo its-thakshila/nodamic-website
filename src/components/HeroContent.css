@@ -33,13 +33,21 @@
   display: block;
 }
 
-.hero-logo-base {
+.hero-logo-base-glow,
+.hero-logo-glitch {
+  /* Prevent Safari clipping by massively expanding the filter bounds without affecting layout */
+  padding: 40px;
+  margin: -40px;
+  box-sizing: content-box;
+}
+
+.hero-logo-base-glow {
   opacity: 0;
-  /* Strong white glow applied directly since the SVG viewBox is physically padded */
+  /* Strong white glow applied to wrapper div to prevent Safari clipping */
   filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.7)) drop-shadow(0px 0px 24px rgba(255, 255, 255, 0.3));
 }
 
-.hero-content-root.visible .hero-logo-base {
+.hero-content-root.visible .hero-logo-base-glow {
   opacity: 1;
   transition: opacity 0.2s ease-in;
 }
