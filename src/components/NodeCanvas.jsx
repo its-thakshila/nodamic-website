@@ -25,35 +25,33 @@ const LABEL_FONT = '500 13px "Outfit"';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Zone dimensions: an elliptical zone the nodes are confined to.
+ * Zone dimensions: a circular zone the nodes are confined to.
  * `scale` expands the zone proportionally from the centre.
  * Returns { cx, cy, rx, ry } in canvas pixels.
  */
 function getZone(W, H, scale = 1) {
-  const zw = W * 0.20 * scale;
-  const zh = H * 0.25 * scale;
+  // Perfect circle based on smaller dimension, with a minimum size for mobile
+  const baseRadius = Math.max(160, Math.min(W, H) * 0.25);
+  const r = baseRadius * scale;
   return {
     cx: W / 2,
     cy: H * 0.36,
-    rx: zw / 2,
-    ry: zh / 2,
+    rx: r,
+    ry: r,
   };
 }
 
-/**
- * Label derived from node's position relative to the expanded zone center.
- * Center = lower value (10). Edges = higher value (99).
- */
 function coordLabel(node, W, H) {
   const cx = W / 2;
   const cy = H * 0.36;
+  
   // Radii of the expanded zone (ZONE_EXPAND = 1.5)
-  const radX = (W * 0.20 * 1.5) / 2;
-  const radY = (H * 0.25 * 1.5) / 2;
+  const baseRadius = Math.max(160, Math.min(W, H) * 0.25);
+  const rad = baseRadius * 1.5;
 
   // Normalized distance from center
-  const nx = (node.x - cx) / radX;
-  const ny = (node.y - cy) / radY;
+  const nx = (node.x - cx) / rad;
+  const ny = (node.y - cy) / rad;
   const normDist = Math.min(1, Math.hypot(nx, ny));
 
   return Math.round(10 + normDist * 89);
