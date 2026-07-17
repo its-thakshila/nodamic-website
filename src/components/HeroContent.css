@@ -34,6 +34,7 @@
   /* Prevent Safari from clipping the drop-shadow into a rectangle by artificially expanding the bounding box */
   padding: 30px;
   margin: -30px;
+  box-sizing: content-box;
 }
 
 .hero-logo-base {
