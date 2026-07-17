@@ -31,19 +31,15 @@
 .hero-logo-glitch {
   width: 100%;
   display: block;
-  /* Prevent Safari from clipping the drop-shadow into a rectangle by artificially expanding the bounding box */
-  padding: 30px;
-  margin: -30px;
-  box-sizing: content-box;
 }
 
-.hero-logo-base {
+.hero-logo-base-glow {
   opacity: 0;
-  /* Strong white glow: tight core + wide outer halo */
+  /* Strong white glow applied to wrapper div to prevent Safari clipping */
   filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.7)) drop-shadow(0px 0px 24px rgba(255, 255, 255, 0.3));
 }
 
-.hero-content-root.visible .hero-logo-base {
+.hero-content-root.visible .hero-logo-base-glow {
   opacity: 1;
   transition: opacity 0.2s ease-in;
 }
@@ -230,12 +226,13 @@
   color: #c0c0c0;
   max-width: 480px;
   line-height: 1.6;
+  min-height: 4.8em; /* Reserve height for up to 3 lines to prevent layout shift during text scramble */
 }
 
 /* Adjust layout based on screen height */
 @media (max-height: 800px) {
   .hero-content-root {
-    margin-top: 80px;
+    margin-top: 140px;
   }
 }
 
@@ -324,7 +321,8 @@
 
   .hero-subheadline {
     font-size: 0.95rem;
-    max-width: 400px;
+    max-width: 300px;
+    min-height: 4.8em; /* 3 lines on mobile landscape */
   }
 }
 
@@ -346,6 +344,7 @@
 
   .hero-subheadline {
     font-size: 0.85rem;
+    min-height: 6.4em; /* Reserve height for up to 4 lines on very narrow screens */
     max-width: 300px;
   }
 }
