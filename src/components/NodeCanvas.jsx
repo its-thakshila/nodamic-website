@@ -252,9 +252,20 @@ export default function NodeCanvas({ className = '', spawning = false }) {
     let lastSpawn = 0;
 
     // ── Resize handler ─────────────────────────────────────────────────────
+    let logicalW = 1000;
+    let logicalH = 1000;
+
     function resize() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const dpr = window.devicePixelRatio || 1;
+      logicalW = canvas.offsetWidth;
+      logicalH = canvas.offsetHeight;
+      
+      // Scale internal resolution up by DPR for crisp Retina rendering
+      canvas.width = logicalW * dpr;
+      canvas.height = logicalH * dpr;
+      
+      // Scale drawing context so our CSS-pixel math draws at the right size
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
     const ro = new ResizeObserver(resize);
@@ -267,9 +278,8 @@ export default function NodeCanvas({ className = '', spawning = false }) {
 
     function onMouseMove(e) {
       const rect = canvas.getBoundingClientRect();
-      // Scale from CSS pixels to canvas pixels
-      mouse.x = (e.clientX - rect.left) * (canvas.width / rect.width);
-      mouse.y = (e.clientY - rect.top) * (canvas.height / rect.height);
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
       mouse.active = true;
     }
     
@@ -277,8 +287,8 @@ export default function NodeCanvas({ className = '', spawning = false }) {
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        mouse.x = (touch.clientX - rect.left) * (canvas.width / rect.width);
-        mouse.y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+        mouse.x = touch.clientX - rect.left;
+        mouse.y = touch.clientY - rect.top;
         mouse.active = true;
       }
     }
@@ -361,12 +371,12 @@ export default function NodeCanvas({ className = '', spawning = false }) {
 
       // Don't do anything until the cinematic transition is complete
       if (!spawningRef.current) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, logicalW, logicalH);
         return;
       }
 
-      const W = canvas.width;
-      const H = canvas.height;
+      const W = logicalW;
+      const H = logicalH;
 
       // ─ Spawn logic ─────────────────────────────────────────────────────
       if (nodes.length < MAX_NODES) {
