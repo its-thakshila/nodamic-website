@@ -286,11 +286,13 @@ export default function NodeCanvas({ className = '', spawning = false }) {
     function onPointerLeave() { mouse.active = false; }
 
     canvas.addEventListener('mousemove', onMouseMove);
-    canvas.addEventListener('mouseleave', onPointerLeave);
+    window.addEventListener('mouseleave', onPointerLeave);
+    window.addEventListener('mouseup', onPointerLeave);
+    
     canvas.addEventListener('touchstart', onTouchMove, { passive: true });
     canvas.addEventListener('touchmove', onTouchMove, { passive: true });
-    canvas.addEventListener('touchend', onPointerLeave);
-    canvas.addEventListener('touchcancel', onPointerLeave);
+    window.addEventListener('touchend', onPointerLeave);
+    window.addEventListener('touchcancel', onPointerLeave);
 
     // ── Connection management ────────────────────────────────────────────────
 
@@ -557,11 +559,13 @@ export default function NodeCanvas({ className = '', spawning = false }) {
       cancelAnimationFrame(animId);
       ro.disconnect();
       canvas.removeEventListener('mousemove', onMouseMove);
-      canvas.removeEventListener('mouseleave', onPointerLeave);
+      window.removeEventListener('mouseleave', onPointerLeave);
+      window.removeEventListener('mouseup', onPointerLeave);
+      
       canvas.removeEventListener('touchstart', onTouchMove);
       canvas.removeEventListener('touchmove', onTouchMove);
-      canvas.removeEventListener('touchend', onPointerLeave);
-      canvas.removeEventListener('touchcancel', onPointerLeave);
+      window.removeEventListener('touchend', onPointerLeave);
+      window.removeEventListener('touchcancel', onPointerLeave);
     };
   }, []);
 
