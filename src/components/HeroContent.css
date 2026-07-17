@@ -45,6 +45,9 @@
   opacity: 0;
   /* Strong white glow applied to wrapper div to prevent Safari clipping */
   filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.7)) drop-shadow(0px 0px 24px rgba(255, 255, 255, 0.3));
+  /* Force hardware acceleration to fix iOS Safari render clipping bug on initial load */
+  transform: translateZ(0);
+  will-change: filter, transform;
 }
 
 .hero-content-root.visible .hero-logo-base-glow {
