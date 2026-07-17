@@ -272,10 +272,25 @@ export default function NodeCanvas({ className = '', spawning = false }) {
       mouse.y = (e.clientY - rect.top) * (canvas.height / rect.height);
       mouse.active = true;
     }
-    function onMouseLeave() { mouse.active = false; }
+    
+    function onTouchMove(e) {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+        mouse.y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+        mouse.active = true;
+      }
+    }
+
+    function onPointerLeave() { mouse.active = false; }
 
     canvas.addEventListener('mousemove', onMouseMove);
-    canvas.addEventListener('mouseleave', onMouseLeave);
+    canvas.addEventListener('mouseleave', onPointerLeave);
+    canvas.addEventListener('touchstart', onTouchMove, { passive: true });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: true });
+    canvas.addEventListener('touchend', onPointerLeave);
+    canvas.addEventListener('touchcancel', onPointerLeave);
 
     // ── Connection management ────────────────────────────────────────────────
 
@@ -542,7 +557,11 @@ export default function NodeCanvas({ className = '', spawning = false }) {
       cancelAnimationFrame(animId);
       ro.disconnect();
       canvas.removeEventListener('mousemove', onMouseMove);
-      canvas.removeEventListener('mouseleave', onMouseLeave);
+      canvas.removeEventListener('mouseleave', onPointerLeave);
+      canvas.removeEventListener('touchstart', onTouchMove);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onPointerLeave);
+      canvas.removeEventListener('touchcancel', onPointerLeave);
     };
   }, []);
 
