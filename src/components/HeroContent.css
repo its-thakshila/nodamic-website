@@ -87,11 +87,13 @@
   filter: drop-shadow(4px 0 rgba(200, 200, 200, 0.9));
 }
 
-.hero-content-root.visible .hero-logo-wrapper:hover .layer-1-hover {
+.hero-content-root.visible .hero-logo-wrapper:hover .layer-1-hover,
+.hero-content-root.visible .hero-logo-wrapper.touched .layer-1-hover {
   animation: glitch-anim-1-hover 0.2s linear forwards;
 }
 
-.hero-content-root.visible .hero-logo-wrapper:hover .layer-2-hover {
+.hero-content-root.visible .hero-logo-wrapper:hover .layer-2-hover,
+.hero-content-root.visible .hero-logo-wrapper.touched .layer-2-hover {
   animation: glitch-anim-2-hover 0.2s linear forwards;
 }
 
@@ -237,7 +239,8 @@
   color: #c0c0c0;
   max-width: 480px;
   line-height: 1.6;
-  min-height: 4.8em; /* Reserve height for up to 3 lines to prevent layout shift during text scramble */
+  min-height: 4.8em;
+  /* Reserve height for up to 3 lines to prevent layout shift during text scramble */
 }
 
 /* Adjust layout based on screen height */
@@ -333,14 +336,15 @@
   .hero-subheadline {
     font-size: 0.95rem;
     max-width: 300px;
-    min-height: 4.8em; /* 3 lines on mobile landscape */
+    min-height: 4.8em;
+    /* 3 lines on mobile landscape */
   }
 }
 
 /* Mobile Portrait */
 @media (max-width: 480px) {
   .hero-content-root {
-    margin-top: 140px;
+    margin-top: 180px;
     padding: 0 16px;
   }
 
@@ -355,7 +359,8 @@
 
   .hero-subheadline {
     font-size: 0.85rem;
-    min-height: 6.4em; /* Reserve height for up to 4 lines on very narrow screens */
+    min-height: 6.4em;
+    /* Reserve height for up to 4 lines on very narrow screens */
     max-width: 300px;
   }
 }

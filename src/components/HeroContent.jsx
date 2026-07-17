@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './HeroContent.css';
 import wordmark from '../assets/wordmark.svg';
 import { TextScramble } from './TextScramble';
 
 export default function HeroContent({ visible }) {
+  const [isTouched, setIsTouched] = useState(false);
+
   return (
     <div className={`hero-content-root ${visible ? 'visible' : ''}`}>
-      <div className="hero-logo-wrapper">
+      <div 
+        className={`hero-logo-wrapper ${isTouched ? 'touched' : ''}`}
+        onTouchStart={() => setIsTouched(true)}
+        onTouchEnd={() => setIsTouched(false)}
+        onTouchCancel={() => setIsTouched(false)}
+      >
         <div className="hero-logo-base-glow">
           <img src={wordmark} alt="Nodamic Logo" className="hero-logo-base" />
         </div>
