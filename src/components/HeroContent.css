@@ -31,6 +31,9 @@
 .hero-logo-glitch {
   width: 100%;
   display: block;
+  /* Prevent Safari from clipping the drop-shadow into a rectangle by artificially expanding the bounding box */
+  padding: 30px;
+  margin: -30px;
 }
 
 .hero-logo-base {
@@ -327,7 +330,7 @@
 /* Mobile Portrait */
 @media (max-width: 480px) {
   .hero-content-root {
-    margin-top: 100px;
+    margin-top: 140px;
     padding: 0 16px;
   }
 

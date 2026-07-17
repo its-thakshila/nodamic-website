@@ -6,10 +6,20 @@ import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader';
 import { EffectComposer, Vignette } from '@react-three/postprocessing';
 import './Atmosphere.css';
 
-import diffMap from '../assets/HeroScene/dark_rock_diff_2k.jpg';
-import armMap from '../assets/HeroScene/dark_rock_arm_2k.jpg';
-import norMap from '../assets/HeroScene/dark_rock_nor_gl_2k.png';
+import diffMap2k from '../assets/HeroScene/dark_rock_diff_2k.jpg';
+import armMap2k from '../assets/HeroScene/dark_rock_arm_2k.jpg';
+import norMap2k from '../assets/HeroScene/dark_rock_nor_gl_2k.png';
+
+import diffMap1k from '../assets/HeroScene/dark_rock_diff_1k.jpg';
+import armMap1k from '../assets/HeroScene/dark_rock_arm_1k.jpg';
+import norMap1k from '../assets/HeroScene/dark_rock_nor_gl_1k.jpg';
+
 import dispMap from '../assets/HeroScene/dark_rock_disp_2k.exr';
+
+const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+const diffMap = isMobile ? diffMap1k : diffMap2k;
+const armMap = isMobile ? armMap1k : armMap2k;
+const norMap = isMobile ? norMap1k : norMap2k;
 
 function CameraRig({ playing }) {
   const vec = new THREE.Vector3();
