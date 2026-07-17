@@ -87,12 +87,20 @@
   filter: drop-shadow(4px 0 rgba(200, 200, 200, 0.9));
 }
 
-.hero-content-root.visible .hero-logo-wrapper:hover .layer-1-hover,
+@media (hover: hover) {
+  .hero-content-root.visible .hero-logo-wrapper:hover .layer-1-hover {
+    animation: glitch-anim-1-hover 0.2s linear forwards;
+  }
+
+  .hero-content-root.visible .hero-logo-wrapper:hover .layer-2-hover {
+    animation: glitch-anim-2-hover 0.2s linear forwards;
+  }
+}
+
 .hero-content-root.visible .hero-logo-wrapper.touched .layer-1-hover {
   animation: glitch-anim-1-hover 0.2s linear forwards;
 }
 
-.hero-content-root.visible .hero-logo-wrapper:hover .layer-2-hover,
 .hero-content-root.visible .hero-logo-wrapper.touched .layer-2-hover {
   animation: glitch-anim-2-hover 0.2s linear forwards;
 }
