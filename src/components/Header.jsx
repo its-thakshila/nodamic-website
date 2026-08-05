@@ -1,8 +1,9 @@
 import { Share2, Zap } from 'lucide-react'
 import { motion } from 'framer-motion'
+import wordmark from '../assets/wordmark.svg'
 
 const fadeDown = {
-  hidden: { opacity: 0, y: -16 },
+  hidden: { opacity: 0, y: -14 },
   visible: (i) => ({
     opacity: 1,
     y: 0,
@@ -15,39 +16,26 @@ export default function Header() {
     <motion.header
       initial="hidden"
       animate="visible"
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-5 md:px-10 md:py-6"
-      style={{ pointerEvents: 'auto' }}
+      className="w-full flex items-center justify-between pb-4 sm:pb-2 pointer-events-auto"
     >
-      {/* ── Brand ── */}
-      <motion.div custom={0} variants={fadeDown} className="flex items-center gap-3">
-        {/* Logo mark */}
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-white opacity-90" />
-          <div className="w-1 h-1 rounded-full bg-white opacity-40" />
-        </div>
-
-        {/* Brand text */}
-        <span
-          className="font-grotesk text-sm font-medium tracking-widest text-white/80 select-none uppercase"
-          style={{ letterSpacing: '0.12em' }}
-        >
-          nodamic
-        </span>
-
-        {/* Divider */}
-        <span className="text-white/20 font-light text-sm select-none">|</span>
+      {/* ── Brand Logo & Title ── */}
+      <motion.div custom={0} variants={fadeDown} className="flex items-end gap-4 sm:gap-5 pb-1">
+        <img
+          src={wordmark}
+          alt="Nodamic Logo"
+          className="h-5 sm:h-6 brightness-0 invert select-none object-contain"
+        />
 
         <span
-          className="font-inter text-xs font-light tracking-wide text-white/40 select-none hidden sm:block"
-          style={{ letterSpacing: '0.06em' }}
+          className="font-outfit text-sm sm:text-base font-light tracking-wide text-white/50 select-none leading-none translate-y-1.5"
+          style={{ letterSpacing: '0.04em' }}
         >
-          Innovation Studio
+          Tech Startup
         </span>
       </motion.div>
 
-      {/* ── Actions ── */}
+      {/* ── Navigation Actions ── */}
       <motion.div custom={1} variants={fadeDown} className="flex items-center gap-3">
-        {/* Share button */}
         <button
           id="share-btn"
           className="icon-btn"
@@ -66,11 +54,9 @@ export default function Header() {
         >
           <Share2 size={14} strokeWidth={1.8} />
         </button>
-
-        {/* CTA pill */}
-        <button id="discover-btn" className="pill-btn">
+        <button id="discover-btn" className="pill-btn gap-2">
           <Zap size={11} strokeWidth={2} />
-          Discover Innovation
+          <span>Discover Innovation</span>
         </button>
       </motion.div>
     </motion.header>

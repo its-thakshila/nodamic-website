@@ -1,11 +1,13 @@
 import { Suspense, useEffect } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, AdaptiveDpr, AdaptiveEvents } from '@react-three/drei'
+import * as THREE from 'three'
 import Node1Model from '../Node1Model'
 import PostProcessing from '../PostProcessing'
-import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG } from '../../config/hero.config'
+import StudioLighting from './StudioLighting'
+import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX } from '../../config/hero.config'
 
-/* Applies scene.environmentRotation on all three axes */
+/* Applies scene.environmentRotation across all axes */
 function EnvRotation({ x, y, z }) {
   const { scene } = useThree()
   useEffect(() => {
@@ -14,25 +16,29 @@ function EnvRotation({ x, y, z }) {
   return null
 }
 
-/* ── Loading fallback ─────────────────────────────────────────────────────── */
+/* ── Loading fallback (invisible during initial asset fetching) ──────────── */
 function LoadingFallback() {
-  return (
-    <mesh>
-      <sphereGeometry args={[0.2, 16, 16]} />
-      <meshStandardMaterial color="#1a1a1a" wireframe />
-    </mesh>
-  )
+  return null
 }
 
+/*
+ * Layer 4 (z-40): HeroScene (React Three Fiber)
+ * Contains ONLY: GLB model, Camera, Studio lights, HDRI environment,
+ * Contact shadows, and Post-processing.
+ * Canvas background strictly remains transparent to reveal atmospheric layers 0-3.
+ */
 export default function HeroScene() {
   const { x, y, z } = ENVIRONMENT_CONFIG.rotation
 
   return (
-    <div className="absolute inset-0 w-full h-full z-[2]">
+    <div
+      className="absolute inset-0 w-full h-full"
+      style={{ zIndex: LAYER_Z_INDEX.heroScene }}
+    >
       <Canvas
         id="scene-canvas"
-        shadows
-        dpr={[1, 2]}
+        shadows={{ type: THREE.PCFSoftShadowMap }}
+        dpr={[1.5, 2]}
         camera={CAMERA_CONFIG}
         gl={GL_CONFIG}
         style={{ background: 'transparent' }}
@@ -40,10 +46,14 @@ export default function HeroScene() {
         <AdaptiveDpr pixelated />
         <AdaptiveEvents />
 
-        {/* Apply Blender-matched HDRI rotation compensated for model angle */}
+        {/* Blender-matched HDRI orientation counter-offset for model rotation */}
         <EnvRotation x={x} y={y} z={z} />
 
+        {/* Studio illumination and statically baked contact shadows */}
+        <StudioLighting />
+
         <Suspense fallback={<LoadingFallback />}>
+          {/* background={false} ensures dark atmosphere remains unbrightened */}
           <Environment
             files={ENVIRONMENT_CONFIG.path}
             background={false}

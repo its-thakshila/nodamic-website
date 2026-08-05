@@ -15,15 +15,13 @@ export default function Node1Model() {
   const groupRef = useRef()
 
   const { scene: originalScene } = useGLTF(MODEL_CONFIG.path)
-
-  // Clone so we never mutate the useGLTF cache
   const scene = useMemo(() => originalScene.clone(true), [originalScene])
 
   const mouse = useRef({ x: 0, y: 0 })
   const rotation = useRef({ x: 0, y: 0 })
   const { gl } = useThree()
 
-  // Compute bounding box from the ORIGINAL unmodified scene
+  // Compute bounding box from original unmodified scene
   const { normScale, centerOffset } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(originalScene)
     const size = new THREE.Vector3()
@@ -53,7 +51,7 @@ export default function Node1Model() {
     }
   }, [gl])
 
-  /* ── Apply normalization + materials to clone ── */
+  /* ── Apply normalization + luxury product photography materials ── */
   useEffect(() => {
     if (!scene) return
 
@@ -64,32 +62,51 @@ export default function Node1Model() {
       -centerOffset.z * normScale,
     )
 
+    const { materials } = MODEL_CONFIG
+
     scene.traverse((child) => {
       if (child.isMesh && child.material) {
         const mat = child.material
+        const meshName = (child.name || '').toLowerCase()
+        const matName  = (mat.name || '').toLowerCase()
 
-        // CRITICAL: GLBs often export with envMapIntensity=0 or a baked
-        // envMap that blocks the scene's HDRI from showing.
-        // Clear the baked envMap so Three.js falls back to scene.environment,
-        // then set a strong envMapIntensity so reflections are actually visible.
+        // Remove baked environment maps so dynamic studio HDRI drives reflections
         if ('envMap' in mat) mat.envMap = null
-        if ('envMapIntensity' in mat) mat.envMapIntensity = 1.0
 
-        // Preserve original roughness — acrylic face keeps its authored value.
-        if (mat.metalness !== undefined)
-          mat.metalness = Math.max(mat.metalness, MODEL_CONFIG.materials.metalnessFloor)
+        const isAcrylic = meshName.includes('acrylic') || matName.includes('acrylic') ||
+                          meshName.includes('plate')   || matName.includes('plate')
+        const isLED     = meshName.includes('led') || matName.includes('led') ||
+                          meshName.includes('light') || matName.includes('light') ||
+                          meshName.includes('indicator') || meshName.includes('dot') || meshName.includes('glow')
 
-        mat.needsUpdate  = true
+        if (isAcrylic) {
+          // STRICTLY apply glossy tempered glass overrides ONLY to the 'Acrylic Plate'
+          if ('envMapIntensity' in mat) mat.envMapIntensity = materials.envMapIntensity
+          if (mat.roughness !== undefined) {
+            const floorRoughness = materials.acrylicRoughness ?? 0.02
+            mat.roughness = Math.max(floorRoughness, mat.roughness * materials.roughnessMultiplier)
+          }
+          if (mat.metalness !== undefined) {
+            mat.metalness = Math.max(mat.metalness, materials.metalnessFloor)
+          }
+          if ('clearcoat' in mat || mat.isMeshPhysicalMaterial) {
+            mat.clearcoat = materials.clearcoat
+            mat.clearcoatRoughness = materials.clearcoatRoughness
+          }
+        } else if (!isLED) {
+          // For BlackPLA, BlackPLA Dark, Brass Terminal: preserve exact authored roughness & metalness!
+          // Simply ensure HDRI reflections are visible at natural physical intensity.
+          if ('envMapIntensity' in mat) {
+            mat.envMapIntensity = 1.2
+          }
+        }
+
         child.castShadow    = true
         child.receiveShadow = true
 
-        const name = (child.name || '').toLowerCase()
-        if (
-          name.includes('led') || name.includes('light') ||
-          name.includes('indicator') || name.includes('dot') || name.includes('glow')
-        ) {
-          mat.emissive          = new THREE.Color(MODEL_CONFIG.materials.emissiveColor)
-          mat.emissiveIntensity = MODEL_CONFIG.materials.emissiveIntensity
+        if (isLED) {
+          mat.emissive          = new THREE.Color(materials.emissiveColor)
+          mat.emissiveIntensity = materials.emissiveIntensity
           mat.toneMapped        = false
         }
 
@@ -99,10 +116,9 @@ export default function Node1Model() {
   }, [scene, normScale, centerOffset])
 
   /* ── Animation loop ── */
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (!groupRef.current) return
 
-    // Tiny subtle follow — model gently leans toward the cursor
     const targetX = mouse.current.y * MODEL_CONFIG.mouseSensitivity.y
     const targetY = mouse.current.x * MODEL_CONFIG.mouseSensitivity.x
 
@@ -115,8 +131,7 @@ export default function Node1Model() {
   })
 
   return (
-    // Centered on page
-    <group ref={groupRef} position={[0, 0, 0]} dispose={null}>
+    <group ref={groupRef} position={MODEL_CONFIG.position || [0, 0, 0]} dispose={null}>
       <primitive object={scene} />
     </group>
   )
