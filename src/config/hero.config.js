@@ -132,7 +132,7 @@ export const STUDIO_LIGHTS = {
   contactShadows: {
     position: [0, -1.25, 0],
     opacity: 0.82,
-    scale: 6.5,
+    scale: 50,
     blur: 1.6,
     far: 3.5,
     color: '#000000',
