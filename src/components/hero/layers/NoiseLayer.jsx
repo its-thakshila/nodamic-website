@@ -1,4 +1,4 @@
-import { LAYER_Z_INDEX } from '../../config/hero.config'
+import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 // Tiny tileable monochrome noise image texture
 const NOISE_TEXTURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwAgMAAAAjsGOJAAAADFBMVEUAAAD///8AAAAAAACO+bN6AAAAAnRSTlMAYT/5/vUAAABqSURBVHjaY2AAgzg4GDBxMDLwcQDxOZhg4uJkAhLzGEHE/0cEEI9/hBEsJoYYH5C9P0PMMh6Y2v/g/rG/jBmsPjAw7wWbJQbT+w5ijAkm1/oW1D0w9RkFf0H2FwAz9z/I5gVfGBgYAADdOC5q60g+lAAAAABJRU5ErkJggg=='

@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { ContactShadows } from '@react-three/drei'
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
-import { STUDIO_LIGHTS } from '../../config/hero.config'
+import { STUDIO_LIGHTS } from '../../../config/hero.config'
 
 RectAreaLightUniformsLib.init()
 

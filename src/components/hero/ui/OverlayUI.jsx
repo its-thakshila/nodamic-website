@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
-import { SquareChevronDownIcon } from '../SquareChevronDownIcon'
-import Header from '../Header'
-import { UI_CONTENT, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../config/hero.config'
+import { SquareChevronDownIcon } from './SquareChevronDownIcon'
+import Header from './Header'
+import { UI_CONTENT, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../../config/hero.config'
 
 /* ─── Animation Variants ─────────────────────────────────────────────────── */
 const containerVariants = {

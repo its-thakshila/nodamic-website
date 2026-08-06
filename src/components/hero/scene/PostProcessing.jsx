@@ -10,7 +10,7 @@ import {
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { Vector2 } from 'three'
-import { POST_PROCESSING_CONFIG } from '../config/hero.config'
+import { POST_PROCESSING_CONFIG } from '../../../config/hero.config'
 
 export default function PostProcessing() {
   const { bloom, ssao, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG

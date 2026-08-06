@@ -2,10 +2,10 @@ import { Suspense, useEffect, lazy } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, AdaptiveDpr, AdaptiveEvents, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
-const Node1Model = lazy(() => import('../Node1Model'))
-import PostProcessing from '../PostProcessing'
+const Node1Model = lazy(() => import('./Node1Model'))
+import PostProcessing from './PostProcessing'
 import StudioLighting from './StudioLighting'
-import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../config/hero.config'
+import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../../config/hero.config'
 
 useEnvironment.preload(ENVIRONMENT_CONFIG.path)
 

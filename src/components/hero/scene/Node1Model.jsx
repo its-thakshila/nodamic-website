@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { MODEL_CONFIG, ANIMATION_TIMING } from '../config/hero.config'
+import { MODEL_CONFIG, ANIMATION_TIMING } from '../../../config/hero.config'
 
 useGLTF.preload(MODEL_CONFIG.path)
 

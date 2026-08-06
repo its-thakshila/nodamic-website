@@ -1,4 +1,4 @@
-import { LAYER_Z_INDEX } from '../../config/hero.config'
+import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 /*
  * Layer 0 (z-0): BackgroundLayer

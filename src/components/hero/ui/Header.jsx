@@ -1,7 +1,7 @@
 import { Share2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import wordmark from '../assets/wordmark.svg'
-import { ANIMATION_TIMING } from '../config/hero.config'
+import wordmark from '../../../assets/wordmark.svg'
+import { ANIMATION_TIMING } from '../../../config/hero.config'
 
 const fadeDown = {
   hidden: { opacity: 0, y: -14 },

@@ -1,4 +1,4 @@
-import { LAYER_Z_INDEX } from '../../config/hero.config'
+import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 /*
  * Layer 3 (z-30): RadialGlowLayer
