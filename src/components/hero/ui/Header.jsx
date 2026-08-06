@@ -5,15 +5,15 @@ import { ANIMATION_TIMING } from '../../../config/hero.config'
 
 const fadeDown = {
   hidden: { opacity: 0, y: -14 },
-  visible: (i) => ({
+  visible: {
     opacity: 1,
     y: 0,
     transition: { 
-      duration: ANIMATION_TIMING.duration - (i * 0.12), 
+      duration: ANIMATION_TIMING.duration, 
       ease: [0.25, 0.1, 0.25, 1], 
-      delay: ANIMATION_TIMING.introDelay + i * 0.12 
+      delay: ANIMATION_TIMING.textDelay 
     },
-  }),
+  },
 }
 
 export default function Header({ isLoaded = false }) {

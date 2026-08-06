@@ -12,15 +12,15 @@ const containerVariants = {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
-  visible: (i = 0) => ({
+  visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: ANIMATION_TIMING.duration - (i * 0.15),
+      duration: ANIMATION_TIMING.duration,
       ease: [0.16, 1, 0.3, 1],
-      delay: ANIMATION_TIMING.introDelay + (i * 0.15)
+      delay: ANIMATION_TIMING.textDelay
     },
-  }),
+  },
 }
 
 const fadeIn = {
@@ -28,9 +28,9 @@ const fadeIn = {
   visible: {
     opacity: 1,
     transition: {
-      duration: ANIMATION_TIMING.duration - 0.3,
+      duration: ANIMATION_TIMING.duration,
       ease: 'easeOut',
-      delay: ANIMATION_TIMING.introDelay + 0.3
+      delay: ANIMATION_TIMING.textDelay
     },
   },
 }

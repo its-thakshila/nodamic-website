@@ -7,20 +7,32 @@ export default memo(function LoadingScreen({ onReady }) {
   const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
+    let isMounted = true;
+    
     // When everything is loaded (progress reaches 100 AND the Drei loading manager queue is fully empty)
     if (progress === 100 && !active && !fading && !hidden) {
-      // Trigger all 3D and UI animations simultaneously at the exact moment the loading screen begins its fade-out
-      onReady()
-      setFading(true)
-      
-      // Remove from DOM after the quick 500ms CSS fade out completes
+      // Additionally ensure all standard DOM WebFonts are fully downloaded and rendered
+      document.fonts.ready.then(() => {
+        if (!isMounted) return;
+        
+        // Trigger all 3D and UI animations simultaneously at the exact moment the loading screen begins its fade-out
+        onReady()
+        setFading(true)
+      })
+    }
+    
+    return () => { isMounted = false }
+  }, [progress, active, fading, hidden, onReady])
+
+  useEffect(() => {
+    if (fading) {
+      // Remove from DOM strictly after the 500ms CSS fade out completes
       const hideTimer = setTimeout(() => {
         setHidden(true)
       }, 500)
-
       return () => clearTimeout(hideTimer)
     }
-  }, [progress, active, fading, hidden, onReady])
+  }, [fading])
 
   if (hidden) return null
 

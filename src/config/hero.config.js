@@ -16,8 +16,9 @@ export const LAYER_Z_INDEX = {
 
 /* ─── Animation Timing ─────────────────────────────────────────────────────── */
 export const ANIMATION_TIMING = {
-  introDelay: 0.45, // Synchronized start delay for model intro and text animations
-  duration: 1.5,    // Unified duration to ensure all animations end simultaneously
+  introDelay: 0,    // Model zoom-in starts instantly at 0s
+  textDelay: 0.4,   // Text waits 0.8s for the model to become clearly visible during its 1.5s zoom
+  duration: 1.5,    // Unified duration for the animations themselves
 }
 
 /* ─── Model Configuration ────────────────────────────────────────────────── */
