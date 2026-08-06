@@ -25,8 +25,6 @@ export default memo(function PostProcessing() {
        * Carves deep contact shadows inside socket terminal cavities and rounded seams.
        */}
       <N8AO
-        halfRes={true}
-        quality="medium"
         aoRadius={ssao.radius}
         intensity={ssao.intensity}
         distanceFalloff={ssao.distanceFalloff}
