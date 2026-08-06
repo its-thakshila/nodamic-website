@@ -1,16 +1,63 @@
-# React + Vite
+# Nodamic | Unthink the Ordinary
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Welcome to the **Nodamic** brand website. This repository contains the source code for our immersive, interactive 3D product showcase built to introduce our flagship device: **Node 1**.
 
-Currently, two official plugins are available:
+Our design philosophy focuses on unthinking the ordinary, combining luxury hardware aesthetics, moody cinematic lighting, and state-of-the-art WebGL engineering to deliver a premium interactive experience directly in the browser.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Tech Stack
 
-## React Compiler
+- **Framework**: [React 19](https://react.dev/)
+- **3D Engine**: [Three.js](https://threejs.org/) + [React Three Fiber](https://docs.pmnd.rs/react-three-fiber/getting-started/introduction)
+- **3D Utilities**: [@react-three/drei](https://github.com/pmndrs/drei)
+- **Post-Processing**: [@react-three/postprocessing](https://docs.pmnd.rs/react-three-postprocessing/introduction)
+- **Styling**: [Tailwind CSS v3](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Bundler**: [Vite](https://vitejs.dev/)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ⚡ Features
 
-## Expanding the Oxlint configuration
+- **Interactive 3D Hardware**: Inspect Node 1 in real-time. The product natively reacts to cursor movement via responsive pointer-tracking mathematics.
+- **Cinematic Rendering**: Implements high-end photography techniques including physical material roughness overrides, HDR image-based lighting, baked contact shadows, and bespoke Post-Processing pipelines (Bloom, Tone Mapping, SMAA, Film Grain, Vignette).
+- **Runtime Performance Engineered**: Optimized `frameloop` rendering, minimal React state churn, rigorous garbage collection, and dynamic Device Pixel Ratio (DPR) scaling guarantees a locked 60 FPS experience across high-end desktops and standard laptops.
+- **Strict Asset Synchronization**: Custom loading pipelines ensure the entire scene (GLB geometry, HDR maps, WebFonts) remains hidden until fully buffered, triggering a unified, perfectly timed cinematic entrance.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## 🛠️ Development
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed (v20+ recommended).
+
+### Installation
+
+Clone the repository and install dependencies:
+
+```bash
+npm install
+```
+
+### Running Locally
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+Visit `http://localhost:5173` in your browser to view the application.
+
+### Building for Production
+
+Compile a highly optimized, minified production build:
+
+```bash
+npm run build
+```
+
+You can preview the built static output using:
+
+```bash
+npm run preview
+```
+
+## 📜 License
+
+© Nodamic. All rights reserved.
