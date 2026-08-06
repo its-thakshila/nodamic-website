@@ -66,7 +66,7 @@ export default memo(function Node1Model({ startAnimations }) {
   const scene = useMemo(() => originalScene.clone(true), [originalScene])
 
   const rotation = useRef({ x: 0, y: 0 })
-  const { pointer } = useThree()
+  const { pointer, size } = useThree()
 
   // High-performance animation references and current state tracking (zero React re-renders)
   const switchMeshRef = useRef(null)
@@ -251,9 +251,13 @@ export default memo(function Node1Model({ startAnimations }) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
 
+    // Responsive viewport multiplier: amplifies pointer influence on smaller screens (laptops/tablets)
+    // so the perceived rotation range remains consistent despite shorter physical mouse travel distance.
+    const sensitivityMultiplier = Math.max(1.0, Math.min(3.0, 1920 / size.width))
+
     // 1. High-performance R3F pointer rotation drift (zero native DOM events)
-    const targetX = -pointer.y * MODEL_CONFIG.mouseSensitivity.y
-    const targetY = pointer.x * MODEL_CONFIG.mouseSensitivity.x
+    const targetX = -pointer.y * MODEL_CONFIG.mouseSensitivity.y * sensitivityMultiplier
+    const targetY = pointer.x * MODEL_CONFIG.mouseSensitivity.x * sensitivityMultiplier
 
     rotation.current.x = lerp(rotation.current.x, targetX, MODEL_CONFIG.lerpFactor)
     rotation.current.y = lerp(rotation.current.y, targetY, MODEL_CONFIG.lerpFactor)

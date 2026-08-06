@@ -15,10 +15,10 @@ import LoadingScreen from './ui/LoadingScreen'
  * Isolated stacking context ensuring strict rendering hierarchy from Layer 0 to Layer 7.
  */
 export default function Hero() {
-  const [startAnimations, setStartAnimations] = useState(false)
+  const [isSceneReady, setIsSceneReady] = useState(false)
 
-  const handleNearFinish = useCallback(() => {
-    setStartAnimations(true)
+  const handleSceneReady = useCallback(() => {
+    setIsSceneReady(true)
   }, [])
 
   return (
@@ -37,19 +37,19 @@ export default function Hero() {
 
       {/* Layer 4 (z-40): React Three Fiber showcase canvas (transparent background) */}
       <WebGLErrorBoundary>
-        <HeroScene startAnimations={startAnimations} />
+        <HeroScene startAnimations={isSceneReady} />
       </WebGLErrorBoundary>
 
       {/* Layer 5 (z-50): CSS atmospheric soft diagonal tempered glass reflections */}
       <ReflectionLayer />
 
       {/* Layer 6 (z-60): All interactive elements (Logo, Nav, Title, Paragraph, CTA) */}
-      <OverlayUI isLoaded={startAnimations} />
+      <OverlayUI isLoaded={isSceneReady} />
 
       {/* Layer 7 (z-70): Unifying foreground film grain (~1.8% opacity) */}
       <ForegroundGrainLayer />
 
-      <LoadingScreen onNearFinish={handleNearFinish} />
+      <LoadingScreen onReady={handleSceneReady} />
     </section>
   )
 }

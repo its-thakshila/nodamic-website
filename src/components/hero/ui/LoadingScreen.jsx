@@ -1,35 +1,26 @@
 import { useProgress } from '@react-three/drei'
 import { useState, useEffect, memo } from 'react'
 
-export default memo(function LoadingScreen({ onNearFinish }) {
-  const { progress } = useProgress()
+export default memo(function LoadingScreen({ onReady }) {
+  const { progress, active } = useProgress()
   const [fading, setFading] = useState(false)
   const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
-    // When everything is loaded (progress reaches 100)
-    if (progress === 100 && !fading && !hidden) {
-      // Trigger animations immediately so their 450ms internal delay begins counting down
-      onNearFinish()
+    // When everything is loaded (progress reaches 100 AND the Drei loading manager queue is fully empty)
+    if (progress === 100 && !active && !fading && !hidden) {
+      // Trigger all 3D and UI animations simultaneously at the exact moment the loading screen begins its fade-out
+      onReady()
+      setFading(true)
+      
+      // Remove from DOM after the quick 500ms CSS fade out completes
+      const hideTimer = setTimeout(() => {
+        setHidden(true)
+      }, 500)
 
-      // Delay the fade out slightly so the animations have time to start moving
-      // before the overlay completely disappears.
-      const startFadeTimer = setTimeout(() => {
-        setFading(true)
-        
-        // Remove from DOM after the quick 500ms fade out completes
-        const hideTimer = setTimeout(() => {
-          setHidden(true)
-        }, 500)
-
-        return () => {
-          clearTimeout(hideTimer)
-        }
-      }, 250)
-
-      return () => clearTimeout(startFadeTimer)
+      return () => clearTimeout(hideTimer)
     }
-  }, [progress, fading, hidden, onNearFinish])
+  }, [progress, active, fading, hidden, onReady])
 
   if (hidden) return null
 
