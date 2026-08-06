@@ -15,8 +15,8 @@ const fadeUp = {
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { 
-      duration: ANIMATION_TIMING.duration - (i * 0.15), 
+    transition: {
+      duration: ANIMATION_TIMING.duration - (i * 0.15),
       ease: [0.16, 1, 0.3, 1],
       delay: ANIMATION_TIMING.introDelay + (i * 0.15)
     },
@@ -27,8 +27,8 @@ const fadeIn = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { 
-      duration: ANIMATION_TIMING.duration - 0.3, 
+    transition: {
+      duration: ANIMATION_TIMING.duration - 0.3,
       ease: 'easeOut',
       delay: ANIMATION_TIMING.introDelay + 0.3
     },
@@ -93,8 +93,8 @@ export default memo(function OverlayUI({ isLoaded = false }) {
           animate={isLoaded ? "visible" : "hidden"}
         >
           <p
-            className="font-grotesk text-2xl md:text-[1.75rem] font-extralight leading-[1.35] text-white/80 text-right"
-            style={{ letterSpacing: '0.01em', maxWidth: '32rem' }}
+            className="font-outfit text-2xl md:text-[1.75rem] font-light leading-[1.15] text-white/80 text-right"
+            style={{ letterSpacing: '0.001em', maxWidth: '32rem' }}
           >
             {UI_CONTENT.bodyParagraph}
           </p>
