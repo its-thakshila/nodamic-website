@@ -135,20 +135,30 @@ export default memo(function Node1Model({ startAnimations }) {
         // As a child, it automatically inherits the parent's position.z animation — no tracking needed.
         child.geometry.computeBoundingBox()
         const bb = child.geometry.boundingBox
-        const sw = bb.max.x - bb.min.x
+
+        // The Switch_Head mesh contains hidden internal geometry extending to the right (+X).
+        // We crop the hit zone to manually match only the exposed knob on the left.
         const sh = bb.max.y - bb.min.y
         const sd = bb.max.z - bb.min.z
-        // Center in the mesh's LOCAL geometry space
-        const cx = (bb.max.x + bb.min.x) / 2
+
+        // The exposed knob is strictly on the left edge.
+        // MANUALLY ADJUST THIS MULTIPLIER (e.g., 0.6 to 0.8) to shrink or expand the length of the hitbox!
+        const sw = sh * 0.4
+
+        // Center Y and Z normally using the full bounds
         const cy = (bb.max.y + bb.min.y) / 2
         const cz = (bb.max.z + bb.min.z) / 2
 
-        const hitGeo = new THREE.BoxGeometry(sw * 1.1, sh * 1.1, sd * 1.1)
+        // Anchor the X center strictly to the left edge (min.x) where the knob is exposed
+        const cx = bb.min.x + (sw / 2)
+
+        // Only pad the Y and Z axes for easier clicking, keep X strictly cropped
+        const hitGeo = new THREE.BoxGeometry(sw, sh * 1.2, sd * 1.2)
         const hitMat = new THREE.MeshBasicMaterial({ visible: false, depthWrite: false, side: THREE.DoubleSide })
         const hitZone = new THREE.Mesh(hitGeo, hitMat)
         hitZone.name = '__switch_hit__'
-        // Position at the geometry center in Switch_Head local space.
-        // When Switch_Head.position.z changes, this child moves with it automatically.
+
+        // Position at the newly cropped geometry center in Switch_Head local space.
         hitZone.position.set(cx, cy, cz)
         hitZoneRef.current = hitZone
 
@@ -271,7 +281,7 @@ export default memo(function Node1Model({ startAnimations }) {
         intro.elapsed += delta
       }
     }
-    
+
     if (!intro.started && intro.elapsed >= INTRO_DELAY) {
       intro.started = true
     }
@@ -281,7 +291,7 @@ export default memo(function Node1Model({ startAnimations }) {
 
       intro.yOffset = lerp(intro.startY, 0, ease)
       intro.zOffset = lerp(intro.startZ, 0, ease)
-      intro.scale   = lerp(intro.startScale, 1, ease)
+      intro.scale = lerp(intro.startScale, 1, ease)
     }
 
     groupRef.current.rotation.x = MODEL_CONFIG.baseRotation.x + rotation.current.x
