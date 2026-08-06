@@ -1,4 +1,5 @@
 import { useRef, useEffect, useMemo, memo } from 'react'
+import { useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 import { STUDIO_LIGHTS } from '../../../config/hero.config'
@@ -13,6 +14,7 @@ RectAreaLightUniformsLib.init()
  * 3. Soft Fill, Rim & Overhead Accents: Carves rounded edges and silhouette separation.
  */
 export default memo(function StudioLighting() {
+  const { size } = useThree()
   const {
     keyRectLight,
     recessLight,
@@ -37,13 +39,30 @@ export default memo(function StudioLighting() {
     }
   }, [keyRectLight.lookAt, keyRectLight.clockwiseRotation, keyRectLight.position, keyRectLight.rotation])
 
+  // Fluidly interpolate recessLight position starting below 1560px
+  const activeRecessPos = useMemo(() => {
+    if (!recessLight) return [0, 0, 0]
+    const basePos = recessLight.position // [4.8, 2, 0.5]
+    if (size.width >= 1560) return basePos
+
+    // Interpolate from 1560px down to 430px
+    const progress = Math.max(0, Math.min(1, (1560 - size.width) / (1560 - 430)))
+    const targetPos = [3.5, 3.5, 0]
+
+    return [
+      basePos[0] + (targetPos[0] - basePos[0]) * progress,
+      basePos[1] + (targetPos[1] - basePos[1]) * progress,
+      basePos[2] + (targetPos[2] - basePos[2]) * progress,
+    ]
+  }, [size.width, recessLight])
+
   // Aim localized grazing spotlight directly at center circular recess target
   useEffect(() => {
     if (recessSpotRef.current && recessLight?.target) {
       recessSpotRef.current.target.position.set(...recessLight.target)
       recessSpotRef.current.target.updateMatrixWorld()
     }
-  }, [recessLight?.target, recessLight?.position])
+  }, [recessLight?.target, activeRecessPos])
 
   // Calculate grid tile geometry to introduce realistic dark louver gaps across the reflected surface
   const { tileW, tileH, tiles } = useMemo(() => {
@@ -92,7 +111,7 @@ export default memo(function StudioLighting() {
       {recessLight && (
         <spotLight
           ref={recessSpotRef}
-          position={recessLight.position}
+          position={activeRecessPos}
           intensity={recessLight.intensity}
           angle={recessLight.angle}
           penumbra={recessLight.penumbra}

@@ -53,6 +53,8 @@ export const MODEL_CONFIG = {
   },
 }
 
+
+
 /* ─── HDRI & Environment Configuration ───────────────────────────────────── */
 const BLENDER_HDRI = {
   x: 3.1 * DEG,
@@ -198,5 +200,9 @@ export const UI_CONTENT = {
   headingTitle: 'Unthink the',
   headingSubtitle: 'Ordinary.',
   ctaButtonText: 'SCROLL TO DISCOVER',
-  bodyParagraph: 'Creating intelligent, minimalist technology products that redefine everyday experiences.',
+  bodyParagraph: {
+    desktop: 'Creating intelligent, minimalist\ntechnology products that redefine\neveryday experiences.',
+    tablet: 'Creating intelligent, minimalist technology products\nthat redefine everyday experiences.',
+    mobile: 'Creating intelligent, minimalist technology products that redefine everyday experiences.',
+  },
 }

@@ -68,6 +68,8 @@ export default memo(function Node1Model({ startAnimations }) {
   const rotation = useRef({ x: 0, y: 0 })
   const { pointer, size } = useThree()
 
+  const isMobile = size.width < 1024
+
   // High-performance animation references and current state tracking (zero React re-renders)
   const switchMeshRef = useRef(null)
   const ledMeshRef = useRef(null)
@@ -96,16 +98,57 @@ export default memo(function Node1Model({ startAnimations }) {
   })
   const INTRO_DELAY = ANIMATION_TIMING.introDelay  // seconds before the settle animation begins
 
+  // Fluid responsive scaling with mathematically perfect FOV snap compensation
+  const activeTargetSize = useMemo(() => {
+    const baseSize = MODEL_CONFIG.targetSize
+
+    // 1. Perfect CSS Height Snap Compensation
+    // When the CSS canvas wrapper drops from 100vh to 55vh at 1024px, the camera's fixed vertical FOV 
+    // causes the product to instantly shrink by 45%. We completely neutralize this visual jump by 
+    // scaling the 3D model inversely to the canvas height ratio.
+    const aspectCompensation = window.innerHeight / size.height
+
+    // 2. Fluid continuous reduction based strictly on width interpolation
+    const MIN_SCALE = 0.70 // <-- Adjust this value to make the mobile model smaller or larger!
+    const MAX_SCALE = 1.00
+
+    const progress = Math.max(0, Math.min(1, (size.width - 430) / (1024 - 430)))
+    const mobileReduction = MIN_SCALE + ((MAX_SCALE - MIN_SCALE) * progress)
+
+    // Above 1024px, aspectCompensation is ~1.0 and mobileReduction is 1.0. 
+    // Below 1024px, the model scales smoothly without ANY sudden breakpoint jumps.
+    return baseSize * aspectCompensation * mobileReduction
+  }, [size.width, size.height])
+
+  // Fluid responsive positioning: smoothly moves the model left and up on mobile
+  const activePosition = useMemo(() => {
+    const basePos = MODEL_CONFIG.position
+    if (size.width >= 1024) return basePos
+
+    // mobileProgress is 0.0 at 1024px, and 1.0 at 430px
+    const mobileProgress = Math.max(0, Math.min(1, (1024 - size.width) / (1024 - 430)))
+
+    // Maximum offsets applied at the smallest mobile size
+    const MAX_X_OFFSET = -0.1 // <-- Adjust this negative to move further left
+    const MAX_Y_OFFSET = 0.25  // <-- Adjust this positive to move further up
+
+    return [
+      basePos[0] + (MAX_X_OFFSET * mobileProgress),
+      basePos[1] + (MAX_Y_OFFSET * mobileProgress),
+      basePos[2]
+    ]
+  }, [size.width])
+
   // Compute bounding box from original unmodified scene
   const { normScale, centerOffset } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(originalScene)
-    const size = new THREE.Vector3()
+    const sz = new THREE.Vector3()
     const center = new THREE.Vector3()
-    box.getSize(size)
+    box.getSize(sz)
     box.getCenter(center)
-    const maxAxis = Math.max(size.x, size.y, size.z)
-    return { normScale: MODEL_CONFIG.targetSize / maxAxis, centerOffset: center }
-  }, [originalScene])
+    const maxAxis = Math.max(sz.x, sz.y, sz.z)
+    return { normScale: activeTargetSize / maxAxis, centerOffset: center }
+  }, [originalScene, activeTargetSize])
 
   /* ── Apply normalization + luxury product photography materials ── */
   useEffect(() => {
@@ -261,11 +304,11 @@ export default memo(function Node1Model({ startAnimations }) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
 
-    // Responsive viewport multiplier: amplifies pointer influence on smaller screens (laptops/tablets)
-    // so the perceived rotation range remains consistent despite shorter physical mouse travel distance.
+    // 1. High-performance rotation drift
     const sensitivityMultiplier = Math.max(1.0, Math.min(3.0, 1920 / size.width))
 
-    // 1. High-performance R3F pointer rotation drift (zero native DOM events)
+    // Desktop and mobile both rely on absolute pointer position tracking.
+    // The CSS bounds restrict the touch area on mobile natively.
     const targetX = -pointer.y * MODEL_CONFIG.mouseSensitivity.y * sensitivityMultiplier
     const targetY = pointer.x * MODEL_CONFIG.mouseSensitivity.x * sensitivityMultiplier
 
@@ -294,9 +337,11 @@ export default memo(function Node1Model({ startAnimations }) {
       intro.scale = lerp(intro.startScale, 1, ease)
     }
 
-    groupRef.current.rotation.x = MODEL_CONFIG.baseRotation.x + rotation.current.x
-    groupRef.current.rotation.y = MODEL_CONFIG.baseRotation.y + rotation.current.y + intro.yOffset
-    groupRef.current.rotation.z = MODEL_CONFIG.baseRotation.z + intro.zOffset
+    const activeBaseRot = MODEL_CONFIG.baseRotation
+
+    groupRef.current.rotation.x = activeBaseRot.x + rotation.current.x
+    groupRef.current.rotation.y = activeBaseRot.y + rotation.current.y + intro.yOffset
+    groupRef.current.rotation.z = activeBaseRot.z + intro.zOffset
     groupRef.current.scale.setScalar(intro.scale)
 
     // 2. High-performance switch translation & LED behavior damping (~200ms mechanical feel)
@@ -371,7 +416,7 @@ export default memo(function Node1Model({ startAnimations }) {
   }
 
   return (
-    <group ref={groupRef} position={MODEL_CONFIG.position || [0, 0, 0]} dispose={null}>
+    <group ref={groupRef} position={activePosition} dispose={null}>
       <primitive
         object={scene}
         onClick={handleClick}
