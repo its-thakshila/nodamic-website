@@ -5,31 +5,16 @@ import {
   Vignette,
   HueSaturation,
   BrightnessContrast,
-  ChromaticAberration,
-  N8AO,
   Noise,
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
-import { Vector2 } from 'three'
 import { POST_PROCESSING_CONFIG } from '../../../config/hero.config'
 
-const CHROMATIC_OFFSET = new Vector2(0.00035, 0.00035)
-
 export default memo(function PostProcessing() {
-  const { bloom, ssao, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
+  const { bloom, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
 
   return (
     <EffectComposer>
-      {/*
-       * Screen-Space Ambient Occlusion (N8AO Engine)
-       * Carves deep contact shadows inside socket terminal cavities and rounded seams.
-       */}
-      <N8AO
-        aoRadius={ssao.radius}
-        intensity={ssao.intensity}
-        distanceFalloff={ssao.distanceFalloff}
-      />
-
       {/*
        * Targeted Bloom — luminanceThreshold locked high to strictly target emissive LED dots
        * and bright mirror specular reflections without fogging matte black hardware surfaces.
@@ -40,14 +25,6 @@ export default memo(function PostProcessing() {
         luminanceSmoothing={bloom.luminanceSmoothing}
         mipmapBlur={true}
         radius={bloom.radius}
-      />
-
-      {/* Tasteful studio photographic optics dispersion */}
-      <ChromaticAberration
-        blendFunction={BlendFunction.NORMAL}
-        offset={CHROMATIC_OFFSET}
-        radialModulation={true}
-        modulationOffset={0.65}
       />
 
       {/*
