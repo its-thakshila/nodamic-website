@@ -1,11 +1,13 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, lazy } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { Environment, AdaptiveDpr, AdaptiveEvents } from '@react-three/drei'
+import { Environment, AdaptiveDpr, AdaptiveEvents, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
-import Node1Model from '../Node1Model'
+const Node1Model = lazy(() => import('../Node1Model'))
 import PostProcessing from '../PostProcessing'
 import StudioLighting from './StudioLighting'
 import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../config/hero.config'
+
+useEnvironment.preload(ENVIRONMENT_CONFIG.path)
 
 /* Applies scene.environmentRotation across all axes */
 function EnvRotation({ x, y, z }) {
@@ -43,6 +45,7 @@ export default function HeroScene({ startAnimations }) {
     >
       <Canvas
         id="scene-canvas"
+        frameloop="demand"
         shadows={{ type: THREE.PCFSoftShadowMap }}
         dpr={[1.5, 2]}
         camera={CAMERA_CONFIG}

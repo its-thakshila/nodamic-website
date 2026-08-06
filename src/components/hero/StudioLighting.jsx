@@ -131,8 +131,8 @@ export default function StudioLighting() {
         intensity={hemisphereLight.intensity}
       />
 
-      {/* ── 6. Dynamic Tabletop Contact Shadows (Reacts to model loading and interaction) ── */}
       <ContactShadows
+        frames={1}
         position={contactShadows.position}
         opacity={contactShadows.opacity}
         scale={contactShadows.scale}

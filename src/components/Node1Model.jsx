@@ -60,7 +60,7 @@ export default function Node1Model({ startAnimations }) {
 
   const mouse = useRef({ x: 0, y: 0 })
   const rotation = useRef({ x: 0, y: 0 })
-  const { gl } = useThree()
+  const { gl, invalidate } = useThree()
 
   // High-performance animation references and current state tracking (zero React re-renders)
   const switchMeshRef = useRef(null)
@@ -106,11 +106,13 @@ export default function Node1Model({ startAnimations }) {
     const onMouseMove = (e) => {
       mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2
       mouse.current.y = (e.clientY / window.innerHeight - 0.5) * 2
+      invalidate()
     }
     const onTouchMove = (e) => {
       if (!e.touches[0]) return
       mouse.current.x = (e.touches[0].clientX / window.innerWidth - 0.5) * 2
       mouse.current.y = (e.touches[0].clientY / window.innerHeight - 0.5) * 2
+      invalidate()
     }
     window.addEventListener('mousemove', onMouseMove, { passive: true })
     window.addEventListener('touchmove', onTouchMove, { passive: true })
@@ -257,6 +259,8 @@ export default function Node1Model({ startAnimations }) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
 
+    let needsUpdate = false
+
     // 1. Existing Mouse / Touch rotation drift
     const targetX = mouse.current.y * MODEL_CONFIG.mouseSensitivity.y
     const targetY = mouse.current.x * MODEL_CONFIG.mouseSensitivity.x
@@ -264,11 +268,25 @@ export default function Node1Model({ startAnimations }) {
     rotation.current.x = lerp(rotation.current.x, targetX, MODEL_CONFIG.lerpFactor)
     rotation.current.y = lerp(rotation.current.y, targetY, MODEL_CONFIG.lerpFactor)
 
+    if (
+      Math.abs(rotation.current.x - targetX) > 0.001 ||
+      Math.abs(rotation.current.y - targetY) > 0.001
+    ) {
+      needsUpdate = true
+    }
+
     // Intro load animation — damp rotation offsets and scale to rest after a short delay
     const intro = introRef.current
     if (startAnimations) {
-      intro.elapsed += delta
+      if (!intro.started) {
+        intro.elapsed += delta
+        needsUpdate = true
+      } else if (intro.elapsed - INTRO_DELAY < ANIMATION_TIMING.duration) {
+        intro.elapsed += delta
+        needsUpdate = true
+      }
     }
+    
     if (!intro.started && intro.elapsed >= INTRO_DELAY) {
       intro.started = true
     }
@@ -296,6 +314,13 @@ export default function Node1Model({ startAnimations }) {
     animValues.current.emissive = damp(animValues.current.emissive, targetEmissive, 12, delta)
     animValues.current.haloOpacity = damp(animValues.current.haloOpacity, targetHaloOpacity, 12, delta)
 
+    if (
+      Math.abs(animValues.current.switchZ - targetZ) > 0.001 ||
+      Math.abs(animValues.current.emissive - targetEmissive) > 0.001
+    ) {
+      needsUpdate = true
+    }
+
     // Directly mutate Three.js instances without triggering React state changes
     if (switchMeshRef.current) {
       switchMeshRef.current.position.z = animValues.current.switchZ
@@ -314,6 +339,8 @@ export default function Node1Model({ startAnimations }) {
       haloMaterialRef.current.opacity = animValues.current.haloOpacity
       haloMaterialRef.current.visible = animValues.current.haloOpacity > 0.005
     }
+
+    if (needsUpdate) invalidate()
   })
 
   /* ── Only our invisible sentinel hit-zones trigger switch interaction ── */
@@ -330,6 +357,7 @@ export default function Node1Model({ startAnimations }) {
     e.stopPropagation()
     if (isHitZone(e.object)) {
       setIsOn((prev) => !prev)
+      invalidate()
     }
   }
 
@@ -337,14 +365,16 @@ export default function Node1Model({ startAnimations }) {
     e.stopPropagation()
     if (isHitZone(e.object)) {
       document.body.style.cursor = 'pointer'
-      if (switchMeshRef.current?.material) {
+      if (switchMeshRef.current?.material && switchMeshRef.current.material.emissiveIntensity === 0) {
         switchMeshRef.current.material.emissive = new THREE.Color('#ffffff')
         switchMeshRef.current.material.emissiveIntensity = 0.06
+        invalidate()
       }
     } else {
       document.body.style.cursor = 'auto'
-      if (switchMeshRef.current?.material) {
+      if (switchMeshRef.current?.material && switchMeshRef.current.material.emissiveIntensity !== 0) {
         switchMeshRef.current.material.emissiveIntensity = 0
+        invalidate()
       }
     }
   }
@@ -352,8 +382,9 @@ export default function Node1Model({ startAnimations }) {
   const handlePointerOut = (e) => {
     e.stopPropagation()
     document.body.style.cursor = 'auto'
-    if (switchMeshRef.current?.material) {
+    if (switchMeshRef.current?.material && switchMeshRef.current.material.emissiveIntensity !== 0) {
       switchMeshRef.current.material.emissiveIntensity = 0
+      invalidate()
     }
   }
 
