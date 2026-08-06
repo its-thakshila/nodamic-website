@@ -14,6 +14,12 @@ export const LAYER_Z_INDEX = {
   foregroundGrain: 70 // Layer 7 (z-70): Unifying film grain composition texture
 }
 
+/* ─── Animation Timing ─────────────────────────────────────────────────────── */
+export const ANIMATION_TIMING = {
+  introDelay: 0.45, // Synchronized start delay for model intro and text animations
+  duration: 1.5,    // Unified duration to ensure all animations end simultaneously
+}
+
 /* ─── Model Configuration ────────────────────────────────────────────────── */
 export const MODEL_CONFIG = {
   path: import.meta.env.BASE_URL + 'models/Node1.glb',

@@ -1,11 +1,11 @@
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, AdaptiveDpr, AdaptiveEvents } from '@react-three/drei'
 import * as THREE from 'three'
 import Node1Model from '../Node1Model'
 import PostProcessing from '../PostProcessing'
 import StudioLighting from './StudioLighting'
-import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX } from '../../config/hero.config'
+import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../config/hero.config'
 
 /* Applies scene.environmentRotation across all axes */
 function EnvRotation({ x, y, z }) {
@@ -15,6 +15,8 @@ function EnvRotation({ x, y, z }) {
   }, [scene, x, y, z])
   return null
 }
+
+
 
 /* ── Loading fallback (invisible during initial asset fetching) ──────────── */
 function LoadingFallback() {
@@ -27,13 +29,17 @@ function LoadingFallback() {
  * Contact shadows, and Post-processing.
  * Canvas background strictly remains transparent to reveal atmospheric layers 0-3.
  */
-export default function HeroScene() {
+export default function HeroScene({ startAnimations }) {
   const { x, y, z } = ENVIRONMENT_CONFIG.rotation
 
   return (
     <div
       className="absolute inset-0 w-full h-full"
-      style={{ zIndex: LAYER_Z_INDEX.heroScene }}
+      style={{
+        zIndex: LAYER_Z_INDEX.heroScene,
+        opacity: startAnimations ? 1 : 0,
+        transition: `opacity 1.5s ease-out ${ANIMATION_TIMING.introDelay}s`,
+      }}
     >
       <Canvas
         id="scene-canvas"
@@ -60,7 +66,7 @@ export default function HeroScene() {
             environmentIntensity={ENVIRONMENT_CONFIG.intensity}
           />
 
-          <Node1Model />
+          <Node1Model startAnimations={startAnimations} />
         </Suspense>
 
         <PostProcessing />
@@ -68,3 +74,4 @@ export default function HeroScene() {
     </div>
   )
 }
+

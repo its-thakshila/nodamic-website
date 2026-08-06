@@ -69,7 +69,6 @@ html, body, button, input, textarea {
   border-color: rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
-  transform: translateY(-1px);
 }
 
 /* Icon button */

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import BackgroundLayer from './BackgroundLayer'
 import NoiseLayer from './NoiseLayer'
 import LightBeamLayer from './LightBeamLayer'
@@ -7,12 +8,15 @@ import ReflectionLayer from './ReflectionLayer'
 import OverlayUI from './OverlayUI'
 import ForegroundGrainLayer from './ForegroundGrainLayer'
 import WebGLErrorBoundary from '../WebGLErrorBoundary'
+import LoadingScreen from './LoadingScreen'
 
 /*
  * Cinematic Layered Hero Architecture
  * Isolated stacking context ensuring strict rendering hierarchy from Layer 0 to Layer 7.
  */
 export default function Hero() {
+  const [startAnimations, setStartAnimations] = useState(false)
+
   return (
     <section className="relative w-full h-screen overflow-hidden bg-[#0a0a0a] isolate">
       {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}
@@ -29,17 +33,19 @@ export default function Hero() {
 
       {/* Layer 4 (z-40): React Three Fiber showcase canvas (transparent background) */}
       <WebGLErrorBoundary>
-        <HeroScene />
+        <HeroScene startAnimations={startAnimations} />
       </WebGLErrorBoundary>
 
       {/* Layer 5 (z-50): CSS atmospheric soft diagonal tempered glass reflections */}
       <ReflectionLayer />
 
       {/* Layer 6 (z-60): All interactive elements (Logo, Nav, Title, Paragraph, CTA) */}
-      <OverlayUI />
+      <OverlayUI isLoaded={startAnimations} />
 
       {/* Layer 7 (z-70): Unifying foreground film grain (~1.8% opacity) */}
       <ForegroundGrainLayer />
+
+      <LoadingScreen onNearFinish={() => setStartAnimations(true)} />
     </section>
   )
 }
