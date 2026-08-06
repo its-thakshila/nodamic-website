@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import BackgroundLayer from './layers/BackgroundLayer'
 import NoiseLayer from './layers/NoiseLayer'
 import LightBeamLayer from './layers/LightBeamLayer'
@@ -16,6 +16,10 @@ import LoadingScreen from './ui/LoadingScreen'
  */
 export default function Hero() {
   const [startAnimations, setStartAnimations] = useState(false)
+
+  const handleNearFinish = useCallback(() => {
+    setStartAnimations(true)
+  }, [])
 
   return (
     <section className="relative w-full h-screen overflow-hidden bg-[#0a0a0a] isolate">
@@ -45,7 +49,7 @@ export default function Hero() {
       {/* Layer 7 (z-70): Unifying foreground film grain (~1.8% opacity) */}
       <ForegroundGrainLayer />
 
-      <LoadingScreen onNearFinish={() => setStartAnimations(true)} />
+      <LoadingScreen onNearFinish={handleNearFinish} />
     </section>
   )
 }

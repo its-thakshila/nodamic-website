@@ -1,7 +1,7 @@
 import { useProgress } from '@react-three/drei'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 
-export default function LoadingScreen({ onNearFinish }) {
+export default memo(function LoadingScreen({ onNearFinish }) {
   const { progress } = useProgress()
   const [fading, setFading] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -45,4 +45,4 @@ export default function LoadingScreen({ onNearFinish }) {
       </div>
     </div>
   )
-}
+})

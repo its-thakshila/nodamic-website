@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 /*
@@ -5,7 +6,7 @@ import { LAYER_Z_INDEX } from '../../../config/hero.config'
  * Combines dark monochrome radial gradients and perimeter vignette using static CSS only.
  * Provides the immersive charcoal foundation without flat plain black.
  */
-export default function BackgroundLayer() {
+export default memo(function BackgroundLayer() {
   return (
     <div
       className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden"
@@ -45,4 +46,4 @@ export default function BackgroundLayer() {
       />
     </div>
   )
-}
+})

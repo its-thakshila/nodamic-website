@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo, memo } from 'react'
 import { ContactShadows } from '@react-three/drei'
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 import { STUDIO_LIGHTS } from '../../../config/hero.config'
@@ -12,7 +12,7 @@ RectAreaLightUniformsLib.init()
  * 2. Hemisphere Light: Bright sky color with near-black ground color, starving bottom faces of bounce light.
  * 3. Soft Fill, Rim & Overhead Accents: Carves rounded edges and silhouette separation.
  */
-export default function StudioLighting() {
+export default memo(function StudioLighting() {
   const {
     keyRectLight,
     recessLight,
@@ -46,23 +46,26 @@ export default function StudioLighting() {
   }, [recessLight?.target, recessLight?.position])
 
   // Calculate grid tile geometry to introduce realistic dark louver gaps across the reflected surface
-  const gridCols = keyRectLight.gridCols || 1
-  const gridRows = keyRectLight.gridRows || 1
-  const tileGap = keyRectLight.tileGap ?? 0
-  const totalWidth = keyRectLight.width || 5
-  const totalHeight = keyRectLight.height || 10
+  const { tileW, tileH, tiles } = useMemo(() => {
+    const gridCols = keyRectLight.gridCols || 1
+    const gridRows = keyRectLight.gridRows || 1
+    const tileGap = keyRectLight.tileGap ?? 0
+    const totalWidth = keyRectLight.width || 5
+    const totalHeight = keyRectLight.height || 10
 
-  const tileW = Math.max(0.1, (totalWidth - (gridCols - 1) * tileGap) / gridCols)
-  const tileH = Math.max(0.1, (totalHeight - (gridRows - 1) * tileGap) / gridRows)
+    const tW = Math.max(0.1, (totalWidth - (gridCols - 1) * tileGap) / gridCols)
+    const tH = Math.max(0.1, (totalHeight - (gridRows - 1) * tileGap) / gridRows)
 
-  const tiles = []
-  for (let r = 0; r < gridRows; r++) {
-    for (let c = 0; c < gridCols; c++) {
-      const x = -totalWidth / 2 + tileW / 2 + c * (tileW + tileGap)
-      const y = totalHeight / 2 - tileH / 2 - r * (tileH + tileGap)
-      tiles.push({ key: `${r}-${c}`, position: [x, y, 0] })
+    const tArray = []
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        const x = -totalWidth / 2 + tW / 2 + c * (tW + tileGap)
+        const y = totalHeight / 2 - tH / 2 - r * (tH + tileGap)
+        tArray.push({ key: `${r}-${c}`, position: [x, y, 0] })
+      }
     }
-  }
+    return { tileW: tW, tileH: tH, tiles: tArray }
+  }, [keyRectLight])
 
   return (
     <>
@@ -143,4 +146,4 @@ export default function StudioLighting() {
       />
     </>
   )
-}
+})

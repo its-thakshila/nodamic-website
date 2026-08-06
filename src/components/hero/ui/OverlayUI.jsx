@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, memo } from 'react'
 import { motion } from 'framer-motion'
 import { SquareChevronDownIcon } from './SquareChevronDownIcon'
 import Header from './Header'
@@ -40,7 +40,7 @@ const fadeIn = {
  * Contains all interactive architecture: Logo, Navigation (Header), Hero title,
  * Paragraph, Labels, CTA button, and Scroll discovery badge.
  */
-export default function OverlayUI({ isLoaded = false }) {
+export default memo(function OverlayUI({ isLoaded = false }) {
   const iconRef = useRef(null)
 
   return (
@@ -102,4 +102,4 @@ export default function OverlayUI({ isLoaded = false }) {
       </div>
     </div>
   )
-}
+})

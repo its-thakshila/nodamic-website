@@ -1,4 +1,4 @@
-import { Suspense, useEffect, lazy } from 'react'
+import { Suspense, useEffect, lazy, memo } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, AdaptiveDpr, AdaptiveEvents, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
@@ -31,7 +31,7 @@ function LoadingFallback() {
  * Contact shadows, and Post-processing.
  * Canvas background strictly remains transparent to reveal atmospheric layers 0-3.
  */
-export default function HeroScene({ startAnimations }) {
+export default memo(function HeroScene({ startAnimations }) {
   const { x, y, z } = ENVIRONMENT_CONFIG.rotation
 
   return (
@@ -47,7 +47,7 @@ export default function HeroScene({ startAnimations }) {
         id="scene-canvas"
         frameloop="demand"
         shadows={{ type: THREE.PCFSoftShadowMap }}
-        dpr={[1.5, 2]}
+        dpr={[1, 1.5]}
         camera={CAMERA_CONFIG}
         gl={GL_CONFIG}
         style={{ background: 'transparent' }}
@@ -76,5 +76,5 @@ export default function HeroScene({ startAnimations }) {
       </Canvas>
     </div>
   )
-}
+})
 

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 /*
@@ -7,7 +8,7 @@ import { LAYER_Z_INDEX } from '../../../config/hero.config'
  * and reduced blur radius to achieve a focused, sharp-edged bar silhouette that
  * avoids wide conical fanning while staying anchored to the ceiling corner.
  */
-export default function LightBeamLayer() {
+export default memo(function LightBeamLayer() {
   return (
     <div
       className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none"
@@ -58,4 +59,4 @@ export default function LightBeamLayer() {
       </div>
     </div>
   )
-}
+})

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 // Tiny tileable monochrome film grain texture
@@ -9,7 +10,7 @@ const NOISE_TEXTURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwAgM
  * across typography, atmospheric reflections, and the 3D showcase.
  * pointer-events: none ensures unblocked UI interactivity.
  */
-export default function ForegroundGrainLayer() {
+export default memo(function ForegroundGrainLayer() {
   return (
     <div
       className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.018]"
@@ -21,4 +22,4 @@ export default function ForegroundGrainLayer() {
       aria-hidden="true"
     />
   )
-}
+})

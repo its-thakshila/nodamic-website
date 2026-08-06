@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import {
   EffectComposer,
   Bloom,
@@ -12,7 +13,9 @@ import { BlendFunction } from 'postprocessing'
 import { Vector2 } from 'three'
 import { POST_PROCESSING_CONFIG } from '../../../config/hero.config'
 
-export default function PostProcessing() {
+const CHROMATIC_OFFSET = new Vector2(0.00035, 0.00035)
+
+export default memo(function PostProcessing() {
   const { bloom, ssao, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
 
   return (
@@ -22,6 +25,8 @@ export default function PostProcessing() {
        * Carves deep contact shadows inside socket terminal cavities and rounded seams.
        */}
       <N8AO
+        halfRes={true}
+        quality="medium"
         aoRadius={ssao.radius}
         intensity={ssao.intensity}
         distanceFalloff={ssao.distanceFalloff}
@@ -42,7 +47,7 @@ export default function PostProcessing() {
       {/* Tasteful studio photographic optics dispersion */}
       <ChromaticAberration
         blendFunction={BlendFunction.NORMAL}
-        offset={new Vector2(0.00035, 0.00035)}
+        offset={CHROMATIC_OFFSET}
         radialModulation={true}
         modulationOffset={0.65}
       />
@@ -75,5 +80,5 @@ export default function PostProcessing() {
       />
     </EffectComposer>
   )
-}
+})
 

@@ -111,7 +111,7 @@ export const STUDIO_LIGHTS = {
     decay: 2.0,                // Physically correct inverse-square attenuation
     color: '#ffffff',
     castShadow: true,          // Preserves natural depth within socket holes
-    shadowMapSize: 1024,
+    shadowMapSize: 512,
     shadowBias: -0.0001,
   },
   fillLight: {
@@ -154,7 +154,9 @@ export const CAMERA_CONFIG = {
 }
 
 export const GL_CONFIG = {
-  antialias: true,
+  antialias: false,
+  stencil: false,
+  depth: true,
   precision: 'highp',
   toneMapping: THREE.ACESFilmicToneMapping,
   toneMappingExposure: 0.95,

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 // Tiny tileable monochrome noise image texture
@@ -8,7 +9,7 @@ const NOISE_TEXTURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwAgM
  * Very subtle procedural base grain at 3% opacity covering entire viewport.
  * pointer-events: none prevents interaction blocking.
  */
-export default function NoiseLayer() {
+export default memo(function NoiseLayer() {
   return (
     <div
       className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.032]"
@@ -20,4 +21,4 @@ export default function NoiseLayer() {
       aria-hidden="true"
     />
   )
-}
+})

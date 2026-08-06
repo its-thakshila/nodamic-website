@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 /*
@@ -5,7 +6,7 @@ import { LAYER_Z_INDEX } from '../../../config/hero.config'
  * CSS-only soft diagonal reflections, glass sheen, and extremely subtle moving highlights.
  * Affects only the atmosphere above the 3D model, with pointer-events: none.
  */
-export default function ReflectionLayer() {
+export default memo(function ReflectionLayer() {
   return (
     <div
       className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none"
@@ -34,4 +35,4 @@ export default function ReflectionLayer() {
       />
     </div>
   )
-}
+})

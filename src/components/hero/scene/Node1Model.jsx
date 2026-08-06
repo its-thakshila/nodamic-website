@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState, useMemo, memo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -30,7 +30,14 @@ function createHaloTexture() {
   return texture
 }
 
-export default function Node1Model({ startAnimations }) {
+/* ─── Static Material Colors (Eliminates GC allocations inside useFrame) ──── */
+const LED_COLOR_ON = new THREE.Color('#ffffff')
+const LED_COLOR_OFF = new THREE.Color('#121212')
+const LED_EMISSIVE_ON = new THREE.Color(MODEL_CONFIG.materials.emissiveColor)
+const LED_EMISSIVE_OFF = new THREE.Color('#000000')
+const HOVER_EMISSIVE_COLOR = new THREE.Color('#ffffff')
+
+export default memo(function Node1Model({ startAnimations }) {
   const [isOn, setIsOn] = useState(true)
   const timerRef = useRef(null)
 
@@ -330,8 +337,8 @@ export default function Node1Model({ startAnimations }) {
     if (ledMaterialRef.current) {
       ledMaterialRef.current.emissiveIntensity = animValues.current.emissive
       // Physically transition base diffuse color between bright lit white and dark unlit bulb
-      const targetColor = isOn ? new THREE.Color('#ffffff') : new THREE.Color('#121212')
-      const targetEmissiveColor = isOn ? new THREE.Color(MODEL_CONFIG.materials.emissiveColor) : new THREE.Color('#000000')
+      const targetColor = isOn ? LED_COLOR_ON : LED_COLOR_OFF
+      const targetEmissiveColor = isOn ? LED_EMISSIVE_ON : LED_EMISSIVE_OFF
       ledMaterialRef.current.color.lerp(targetColor, 0.15)
       ledMaterialRef.current.emissive.lerp(targetEmissiveColor, 0.15)
     }
@@ -366,7 +373,7 @@ export default function Node1Model({ startAnimations }) {
     if (isHitZone(e.object)) {
       document.body.style.cursor = 'pointer'
       if (switchMeshRef.current?.material && switchMeshRef.current.material.emissiveIntensity === 0) {
-        switchMeshRef.current.material.emissive = new THREE.Color('#ffffff')
+        switchMeshRef.current.material.emissive = HOVER_EMISSIVE_COLOR
         switchMeshRef.current.material.emissiveIntensity = 0.06
         invalidate()
       }
@@ -398,5 +405,5 @@ export default function Node1Model({ startAnimations }) {
       />
     </group>
   )
-}
+})
 

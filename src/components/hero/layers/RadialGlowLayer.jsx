@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 
 /*
@@ -5,7 +6,7 @@ import { LAYER_Z_INDEX } from '../../../config/hero.config'
  * Soft glow positioned directly behind the product silhouette (not center screen)
  * to carve out background depth separation without competing with foreground materials.
  */
-export default function RadialGlowLayer() {
+export default memo(function RadialGlowLayer() {
   return (
     <div
       className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none"
@@ -30,4 +31,4 @@ export default function RadialGlowLayer() {
       />
     </div>
   )
-}
+})

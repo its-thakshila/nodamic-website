@@ -115,10 +115,16 @@ html, body, button, input, textarea {
 
 .animate-blob-left {
   animation: blob-float-left 18s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .animate-blob-right {
   animation: blob-float-right 22s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* ─── Tempered Glass Reflection Overlay Animation ────────────────────────── */
@@ -129,6 +135,8 @@ html, body, button, input, textarea {
 
 .animate-glass-reflection {
   animation: glass-reflection-drift 24s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* ─── Cinematic Softbox Light Beam Drift ─────────────────────────────────── */
@@ -139,4 +147,7 @@ html, body, button, input, textarea {
 
 .animate-beam-drift {
   animation: beam-drift 18s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
