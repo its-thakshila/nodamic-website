@@ -79,7 +79,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
               onMouseEnter={() => iconRef.current?.startAnimation?.()}
               onMouseLeave={() => iconRef.current?.stopAnimation?.()}
             >
-              <SquareChevronDownIcon ref={iconRef} size={20} className="-translate-y-[-1.2px]" />
+              <SquareChevronDownIcon ref={iconRef} size={20} className="-translate-y-[-1.1px]" />
               <span>{UI_CONTENT.ctaButtonText}</span>
             </button>
           </motion.div>
