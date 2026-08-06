@@ -6,6 +6,7 @@ import {
   HueSaturation,
   BrightnessContrast,
   Noise,
+  SMAA,
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { POST_PROCESSING_CONFIG } from '../../../config/hero.config'
@@ -53,6 +54,9 @@ export default memo(function PostProcessing() {
         offset={vignette.offset}
         darkness={vignette.darkness}
       />
+
+      {/* Lightweight Subpixel Morphological Antialiasing to smooth harsh geometric edges */}
+      <SMAA />
     </EffectComposer>
   )
 })
