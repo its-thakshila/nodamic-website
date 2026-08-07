@@ -307,10 +307,11 @@ export default memo(function Node1Model({ startAnimations }) {
     // 1. High-performance rotation drift
     const sensitivityMultiplier = Math.max(1.0, Math.min(3.0, 1920 / size.width))
 
-    // Desktop and mobile both rely on absolute pointer position tracking.
-    // The CSS bounds restrict the touch area on mobile natively.
-    const targetX = -pointer.y * MODEL_CONFIG.mouseSensitivity.y * sensitivityMultiplier
-    const targetY = pointer.x * MODEL_CONFIG.mouseSensitivity.x * sensitivityMultiplier
+    // Desktop and landscape/tablet rely on absolute pointer position tracking.
+    // On small portrait phone screens, we lock the rotation to zero so touch dragging doesn't move the model.
+    const isSmallPortrait = size.width < 768 && size.height > size.width
+    const targetX = isSmallPortrait ? 0 : -pointer.y * MODEL_CONFIG.mouseSensitivity.y * sensitivityMultiplier
+    const targetY = isSmallPortrait ? 0 : pointer.x * MODEL_CONFIG.mouseSensitivity.x * sensitivityMultiplier
 
     rotation.current.x = lerp(rotation.current.x, targetX, MODEL_CONFIG.lerpFactor)
     rotation.current.y = lerp(rotation.current.y, targetY, MODEL_CONFIG.lerpFactor)
