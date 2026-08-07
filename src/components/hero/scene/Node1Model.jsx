@@ -66,7 +66,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   const scene = useMemo(() => originalScene.clone(true), [originalScene])
 
   const rotation = useRef({ x: 0, y: 0 })
-  const { pointer, size } = useThree()
+  const { pointer, size, gl, camera } = useThree()
 
   const isMobile = size.width < 1024
 
@@ -258,11 +258,19 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       }
     })
 
+    // Force pre-compile of all materials and geometries in the scene before the first render
+    gl.compile(scene, camera)
+
     // After materials are configured, wait for the browser to paint the actual frame.
     // The double requestAnimationFrame ensures we clear the React render cycle and the WebGL draw call.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (onModelReady) onModelReady()
+        // Add a deliberate warm-up delay. This gives frameloop="always" time to render
+        // 15-30 frames invisibly in the background, fully warming up the Post-Processing passes
+        // and shadow maps before we drop the loading screen.
+        setTimeout(() => {
+          if (onModelReady) onModelReady()
+        }, 500)
       })
     })
   }, [scene])
