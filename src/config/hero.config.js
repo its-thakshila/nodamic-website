@@ -59,7 +59,6 @@ export const MODEL_CONFIG = {
     acrylicRoughness: 0.08, // Blurs reflected studio grid tiles into smoothly diffused highlights
     metalnessFloor: 0.15,
     roughnessMultiplier: 0.65,
-    envMapIntensity: 3.4,
     clearcoat: 1.0,
     clearcoatRoughness: 0.08, // Softens upper clearcoat reflection sheen
     emissiveIntensity: 3.2,
@@ -71,47 +70,23 @@ export const MODEL_CONFIG = {
 
 /* ─── HDRI & Environment Configuration ───────────────────────────────────── */
 const BLENDER_HDRI = {
-  x: 3.1 * DEG,
-  y: 293 * DEG,
-  z: 88.5 * DEG,
+  x: 0 * DEG,
+  y: 0 * DEG,
+  z: 0 * DEG,
 }
 
 export const ENVIRONMENT_CONFIG = {
-  path: import.meta.env.BASE_URL + 'textures/white_home_studio_1k.hdr',
-  intensity: 2.5,
+  path: import.meta.env.BASE_URL + 'textures/studio_kominka_01_2k.hdr',
+  intensity: 1.5,
   rotation: {
-    x: BLENDER_HDRI.x - MODEL_CONFIG.baseRotation.x,
-    y: BLENDER_HDRI.y - MODEL_CONFIG.baseRotation.y,
-    z: BLENDER_HDRI.z - MODEL_CONFIG.baseRotation.z,
+    x: -1.00,
+    y: -0.75,
+    z: -1.09,
   },
 }
 
 /* ─── Complete Studio Photography Lighting Setup ─────────────────────────── */
 export const STUDIO_LIGHTS = {
-  keyRectLight: {
-    // Positioned right and forward as a studio strip box to restrict reflection to the right half
-    position: [12, 11, 3.8],
-    lookAt: [0, -0.15, 0],      // Aimed slightly below center to catch the right acrylic slope
-    /*
-     * CLOCKWISE / TILT ROTATION:
-     * - Adjust clockwiseRotation (in radians, e.g. 0.35, 0.6, or -0.4) to spin the softbox
-     *   clockwise or counter-clockwise while keeping it aimed at the lookAt point above!
-     */
-    clockwiseRotation: 4,    // Positive numbers rotate clockwise; adjust to tilt the reflection line!
-    /*
-     * STUDIO LIGHT GRID SPLITTING:
-     * - Divides the overall rectangular softbox into an array of square tile panes with small dark gaps between them.
-     * - Adjust gridCols, gridRows, and tileGap to fine-tune the realistic reflected grid pattern on the glass!
-     */
-    gridCols: 2,                // Number of horizontal light columns
-    gridRows: 4,                // Number of vertical light rows
-    tileGap: 0.3,              // Dark louver gap separation between adjacent square light tiles
-    rotation: [-0.8, 0.6, 0.4], // Manual Euler angle fallback if lookAt is set to null
-    width: 8,                   // Total combined width of the studio light bank
-    height: 15,                 // Total combined height of the studio light bank
-    intensity: 5.5,
-    color: '#ffffff',
-  },
   /*
    * LOCALIZED RECESSED SOCKET FILL LIGHT:
    * - A soft, high-penumbra spot light that casts a grazing illumination across ONLY the right half
@@ -127,29 +102,24 @@ export const STUDIO_LIGHTS = {
     distance: 5.8,             // Adjusted effective range so light illuminates right rim and gracefully fades out before left side
     decay: 2.0,                // Physically correct inverse-square attenuation
     color: '#ffffff',
-    castShadow: true,          // Preserves natural depth within socket holes
+    castShadow: false,          // Preserves natural depth within socket holes
     shadowMapSize: 1024,
     shadowBias: -0.0001,
   },
-  fillLight: {
-    position: [-4.5, 2.5, 3.5],
-    intensity: 0.85, // Muted slightly so right key-beam remains authoritative
-    color: '#e2e8f0',
-  },
   rimLight: {
     position: [-3.5, 1.2, -4.5],
-    intensity: 2.8,
+    intensity: 10,
     color: '#e0f2fe',
   },
   overheadLight: {
     position: [0.5, 7.0, 0.5],
-    intensity: 10,
+    intensity: 15,
     color: '#ffffff',
   },
   // Hemisphere light starves underside of bounce while illuminating top facets
   hemisphereLight: {
     skyColor: '#ffffff',
-    groundColor: '#020202',
+    groundColor: '#ffffff',
     intensity: 10,
   },
   contactShadows: {

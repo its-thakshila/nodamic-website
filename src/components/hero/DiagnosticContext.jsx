@@ -26,6 +26,7 @@ export function DiagnosticProvider({ children }) {
   const [enableLights, setEnableLights] = useStickyState(true, 'diag_enableLights')
   const [enableContactShadows, setEnableContactShadows] = useStickyState(true, 'diag_enableContactShadows')
   const [enablePostProcessing, setEnablePostProcessing] = useStickyState(true, 'diag_enablePostProcessing')
+  const [hdriRotation, setHdriRotation] = useStickyState(null, 'diag_hdriRotation')
 
   const value = {
     showPerf, setShowPerf,
@@ -35,7 +36,8 @@ export function DiagnosticProvider({ children }) {
     useStandardMaterial, setUseStandardMaterial,
     enableLights, setEnableLights,
     enableContactShadows, setEnableContactShadows,
-    enablePostProcessing, setEnablePostProcessing
+    enablePostProcessing, setEnablePostProcessing,
+    hdriRotation, setHdriRotation
   }
 
   return (

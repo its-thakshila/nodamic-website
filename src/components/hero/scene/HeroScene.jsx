@@ -71,8 +71,12 @@ const STATIC_DPR = getStaticDPR()
  * Canvas background strictly remains transparent to reveal atmospheric layers 0-3.
  */
 export default memo(function HeroScene({ startAnimations, onModelReady }) {
-  const { x, y, z } = ENVIRONMENT_CONFIG.rotation
   const diag = useDiagnostic()
+  const { x, y, z } = ENVIRONMENT_CONFIG.rotation
+  
+  const activeX = diag?.hdriRotation ? diag.hdriRotation.x : x
+  const activeY = diag?.hdriRotation ? diag.hdriRotation.y : y
+  const activeZ = diag?.hdriRotation ? diag.hdriRotation.z : z
 
   const activeToneMapping = DEBUG_FLAGS.toneMapping === 'AgX' 
     ? THREE.AgXToneMapping 
@@ -97,7 +101,7 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
       >
         {diag?.showPerf && <Perf position="top-left" />}
         {/* Blender-matched HDRI orientation counter-offset for model rotation */}
-        <EnvRotation x={x} y={y} z={z} />
+        <EnvRotation x={activeX} y={activeY} z={activeZ} />
 
         {/* Studio illumination and statically baked contact shadows */}
         <StudioLighting />

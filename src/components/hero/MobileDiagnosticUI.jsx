@@ -48,6 +48,35 @@ export default function MobileDiagnosticUI() {
         onClick={() => diag.setEnableHDRI(!diag.enableHDRI)} 
         warning={!diag.enableHDRI}
       />
+      
+      {diag.enableHDRI && (
+        <div className="bg-white/5 p-2 rounded border border-white/10 flex flex-col gap-1">
+          <div className="text-[10px] text-white/50 mb-1">HDRI Rotation (Radians)</div>
+          
+          <RotationSlider 
+            label="X" 
+            value={diag.hdriRotation?.x ?? 0} 
+            onChange={(val) => diag.setHdriRotation(prev => ({ ...prev, x: val }))} 
+          />
+          <RotationSlider 
+            label="Y" 
+            value={diag.hdriRotation?.y ?? 0} 
+            onChange={(val) => diag.setHdriRotation(prev => ({ ...prev, y: val }))} 
+          />
+          <RotationSlider 
+            label="Z" 
+            value={diag.hdriRotation?.z ?? 0} 
+            onChange={(val) => diag.setHdriRotation(prev => ({ ...prev, z: val }))} 
+          />
+          <button 
+            onClick={() => diag.setHdriRotation(null)}
+            className="mt-1 text-[10px] text-rose-400 hover:text-rose-300 text-right"
+          >
+            Reset Rotation
+          </button>
+        </div>
+      )}
+
       <ToggleButton 
         label="5. StandardMat (Kill Clearcoat)" 
         active={diag.useStandardMaterial} 
@@ -93,5 +122,24 @@ function ToggleButton({ label, active, onClick, warning }) {
     >
       {label}
     </button>
+  )
+}
+
+function RotationSlider({ label, value, onChange }) {
+  // value is in radians. Slider goes from -PI to +PI.
+  return (
+    <div className="flex items-center gap-2">
+      <div className="text-white/60 text-[10px] w-3">{label}</div>
+      <input 
+        type="range" 
+        min={-Math.PI} 
+        max={Math.PI} 
+        step={0.01} 
+        value={value} 
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="flex-1 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
+      />
+      <div className="text-white/40 text-[9px] w-8 text-right">{value.toFixed(2)}</div>
+    </div>
   )
 }

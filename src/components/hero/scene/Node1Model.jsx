@@ -230,7 +230,6 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
           meshName.includes('indicator') || meshName.includes('dot') || meshName.includes('glow')
 
         if (isAcrylic) {
-          // Diagnostic override: StandardMaterial instead of PhysicalMaterial
           if (diag && diag.useStandardMaterial && mat.isMeshPhysicalMaterial) {
             const stdMat = new THREE.MeshStandardMaterial({
               color: mat.color,
@@ -240,27 +239,22 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
             })
             child.material = stdMat
             mat = stdMat
-          } else {
-            // STRICTLY apply glossy tempered glass overrides ONLY to the 'Acrylic Plate'
-            if ('envMapIntensity' in mat) mat.envMapIntensity = materials.envMapIntensity
-            if (mat.roughness !== undefined) {
-              const floorRoughness = materials.acrylicRoughness ?? 0.02
-              mat.roughness = Math.max(floorRoughness, mat.roughness * materials.roughnessMultiplier)
-            }
-            if (mat.metalness !== undefined) {
-              mat.metalness = Math.max(mat.metalness, materials.metalnessFloor)
-            }
-            if ('clearcoat' in mat || mat.isMeshPhysicalMaterial) {
-              mat.clearcoat = materials.clearcoat
-              mat.clearcoatRoughness = materials.clearcoatRoughness
-            }
+          }
+          
+          // STRICTLY apply glossy tempered glass overrides ONLY to the 'Acrylic Plate'
+          if (mat.roughness !== undefined) {
+            const floorRoughness = materials.acrylicRoughness ?? 0.02
+            mat.roughness = Math.max(floorRoughness, mat.roughness * materials.roughnessMultiplier)
+          }
+          if (mat.metalness !== undefined) {
+            mat.metalness = Math.max(mat.metalness, materials.metalnessFloor)
+          }
+          if ('clearcoat' in mat || mat.isMeshPhysicalMaterial) {
+            mat.clearcoat = materials.clearcoat
+            mat.clearcoatRoughness = materials.clearcoatRoughness
           }
         } else if (!isLED) {
           // For BlackPLA, BlackPLA Dark, Brass Terminal: preserve exact authored roughness & metalness!
-          // Simply ensure HDRI reflections are visible at natural physical intensity.
-          if ('envMapIntensity' in mat) {
-            mat.envMapIntensity = 1.2
-          }
         }
 
         child.castShadow = true
@@ -306,7 +300,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     } else {
       console.log('[DEBUG] Node1Model.jsx: onModelReady is undefined.')
     }
-  }, [scene])
+  }, [scene, JSON.stringify(MODEL_CONFIG.materials)])
 
   /* ── Attach soft ambient LED Halo sprite ── */
   useEffect(() => {
