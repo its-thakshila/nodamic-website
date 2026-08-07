@@ -12,7 +12,7 @@ import {
 import { BlendFunction } from 'postprocessing'
 import { POST_PROCESSING_CONFIG, DEBUG_FLAGS } from '../../../config/hero.config'
 
-export default memo(function PostProcessing() {
+export default memo(function PostProcessing({ isHeavyRenderEnabled }) {
   const { bloom, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
 
   return (
@@ -26,7 +26,7 @@ export default memo(function PostProcessing() {
        * Targeted Bloom — luminanceThreshold locked high to strictly target emissive LED dots
        * and bright mirror specular reflections without fogging matte black hardware surfaces.
        */}
-      {DEBUG_FLAGS.enableBloom && (
+      {isHeavyRenderEnabled && DEBUG_FLAGS.enableBloom && (
         <Bloom
           intensity={bloom.intensity}
           luminanceThreshold={bloom.luminanceThreshold}
@@ -41,7 +41,7 @@ export default memo(function PostProcessing() {
        * Introduces near-complete monochrome halftones while elevating contrast and luminance
        * to ensure rich dynamic range and liquid reflections rather than flat grayscale.
        */}
-      {DEBUG_FLAGS.enableColorGrading && (
+      {isHeavyRenderEnabled && DEBUG_FLAGS.enableColorGrading && (
         <>
           <HueSaturation
             blendFunction={BlendFunction.NORMAL}
@@ -55,14 +55,15 @@ export default memo(function PostProcessing() {
       )}
 
       {/* Subtle photographic sensor grain texture */}
-      {DEBUG_FLAGS.enableNoise && (
+      {isHeavyRenderEnabled && DEBUG_FLAGS.enableNoise && (
         <Noise
           opacity={noise.opacity}
           blendFunction={BlendFunction.OVERLAY}
         />
       )}
 
-      {/* Perimeter vignette anchoring visual focus centrally onto product geometry */}
+      {/* Perimeter vignette anchoring visual focus centrally onto product geometry. 
+          Vignette is kept enabled always as it's extremely cheap and covers the whole screen. */}
       {DEBUG_FLAGS.enableVignette && (
         <Vignette
           blendFunction={BlendFunction.MULTIPLY}
@@ -72,7 +73,7 @@ export default memo(function PostProcessing() {
       )}
 
       {/* Lightweight Subpixel Morphological Antialiasing to smooth harsh geometric edges */}
-      {DEBUG_FLAGS.enableSMAA && <SMAA />}
+      {isHeavyRenderEnabled && DEBUG_FLAGS.enableSMAA && <SMAA />}
     </EffectComposer>
   )
 })

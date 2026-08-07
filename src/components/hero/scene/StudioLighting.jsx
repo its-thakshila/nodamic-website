@@ -13,7 +13,7 @@ RectAreaLightUniformsLib.init()
  * 2. Hemisphere Light: Bright sky color with near-black ground color, starving bottom faces of bounce light.
  * 3. Soft Fill, Rim & Overhead Accents: Carves rounded edges and silhouette separation.
  */
-export default memo(function StudioLighting() {
+export default memo(function StudioLighting({ isHeavyRenderEnabled }) {
   const { size } = useThree()
   const {
     keyRectLight,
@@ -164,16 +164,18 @@ export default memo(function StudioLighting() {
         intensity={hemisphereLight.intensity}
       />
 
-      <ContactShadows
-        frames={1}
-        position={contactShadows.position}
-        opacity={contactShadows.opacity}
-        scale={contactShadows.scale}
-        blur={contactShadows.blur}
-        far={contactShadows.far}
-        color={contactShadows.color}
-        resolution={1024}
-      />
+      {isHeavyRenderEnabled && (
+        <ContactShadows
+          frames={1}
+          position={contactShadows.position}
+          opacity={contactShadows.opacity}
+          scale={contactShadows.scale}
+          blur={contactShadows.blur}
+          far={contactShadows.far}
+          color={contactShadows.color}
+          resolution={1024}
+        />
+      )}
     </>
   )
 })

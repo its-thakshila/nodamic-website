@@ -29,9 +29,9 @@ export const DEBUG_FLAGS = {
 
 /* ─── Animation Timing ─────────────────────────────────────────────────────── */
 export const ANIMATION_TIMING = {
-  introDelay: 0,      // Animation begins immediately as the loading screen starts fading out
-  textDelay: 0.4,     // Typography fades in as the model builds momentum
-  ctaDelay: 0.7,      // CTA button appears last for a fluid 3-stage stagger
+  introDelay: 0.3,    // 300ms delay to allow the loading screen to fade completely and ensure the scene is light
+  textDelay: 0.6,     // Typography fades in exactly as the model picks up speed
+  ctaDelay: 0.9,      // CTA button appears last for a fluid 3-stage stagger
   duration: 1.5,      // Unified duration for the animations themselves
 }
 
