@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import * as THREE from 'three'
 import {
   EffectComposer,
   Bloom,
@@ -15,7 +16,12 @@ export default memo(function PostProcessing() {
   const { bloom, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
 
   return (
-    <EffectComposer>
+    <EffectComposer
+      multisampling={0}
+      disableNormalPass={true}
+      frameBufferType={THREE.HalfFloatType}
+      dithering={false}
+    >
       {/*
        * Targeted Bloom — luminanceThreshold locked high to strictly target emissive LED dots
        * and bright mirror specular reflections without fogging matte black hardware surfaces.
