@@ -1,6 +1,6 @@
-import { Suspense, useEffect, lazy, memo, useState, useCallback, useRef } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { Environment, AdaptiveDpr, AdaptiveEvents, useEnvironment } from '@react-three/drei'
+import { Suspense, useEffect, lazy, memo } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { Environment, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
 const Node1Model = lazy(() => import('./Node1Model'))
 import PostProcessing from './PostProcessing'
@@ -23,34 +23,44 @@ function EnvRotation({ x, y, z }) {
   return null
 }
 
-
-
 /* ── Loading fallback (invisible during initial asset fetching) ──────────── */
 function LoadingFallback() {
   return null
 }
 
-/* Lightweight runtime FPS monitor — gently scales DPR down if rendering averages <54 FPS */
-function AdaptiveQualityMonitor({ onLowFps }) {
-  const frames = useRef(0)
-  const elapsed = useRef(0)
-  const triggered = useRef(false)
+/* ── Static DPR Heuristic Calculation ── */
+const getStaticDPR = () => {
+  if (typeof window === 'undefined') return 1
 
-  useFrame((_, delta) => {
-    if (triggered.current) return
-    frames.current += 1
-    elapsed.current += delta
-    if (elapsed.current >= 2.0) {
-      if (frames.current / elapsed.current < 54) {
-        triggered.current = true
-        onLowFps()
-      }
-      frames.current = 0
-      elapsed.current = 0
-    }
-  })
-  return null
+  const dpr = window.devicePixelRatio || 1
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+  const isIOS = /iPhone|iPad/i.test(navigator.userAgent)
+  const cores = navigator.hardwareConcurrency || 4
+
+  if (!isMobile) {
+    // Desktop: 1.5 to 2.0 max
+    return Math.min(dpr, 2.0)
+  }
+
+  if (isIOS) {
+    // High-end iPhones usually have strong GPUs
+    return Math.min(dpr, 2.0)
+  }
+
+  // Android tiering based on logical cores
+  if (cores >= 8) {
+    // High-end Android (Snapdragon 8 Gen X, etc.)
+    return Math.min(dpr, 2.0)
+  } else if (cores >= 6) {
+    // Mid-range Android
+    return Math.min(dpr, 1.5)
+  } else {
+    // Low-end Android
+    return Math.min(dpr, 1.25)
+  }
 }
+
+const STATIC_DPR = getStaticDPR()
 
 /*
  * Layer 4 (z-40): HeroScene (React Three Fiber)
@@ -60,8 +70,6 @@ function AdaptiveQualityMonitor({ onLowFps }) {
  */
 export default memo(function HeroScene({ startAnimations, onModelReady }) {
   const { x, y, z } = ENVIRONMENT_CONFIG.rotation
-  const [isLowFps, setIsLowFps] = useState(false)
-  const handleLowFps = useCallback(() => setIsLowFps(true), [])
 
   const activeToneMapping = DEBUG_FLAGS.toneMapping === 'AgX' 
     ? THREE.AgXToneMapping 
@@ -80,17 +88,12 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
         id="scene-canvas"
         frameloop="always"
         shadows={{ type: THREE.PCFSoftShadowMap }}
-        // Use fixed DPR of 2.0 if forced, otherwise fall back to adaptive rules
-        dpr={DEBUG_FLAGS.forceFixedDPR ? 2.0 : (isLowFps ? [0.85, 1.5] : [1.0, 2.0])}
+        // Lock the DPR once during initialization based on device capability
+        dpr={DEBUG_FLAGS.forceFixedDPR ? 2.0 : STATIC_DPR}
         camera={CAMERA_CONFIG}
         gl={{ ...GL_CONFIG, toneMapping: activeToneMapping }}
         style={{ background: 'transparent' }}
       >
-        {/* Completely disable AdaptiveDpr if forceFixedDPR is true */}
-        {!DEBUG_FLAGS.forceFixedDPR && <AdaptiveDpr />}
-        <AdaptiveEvents />
-        <AdaptiveQualityMonitor onLowFps={handleLowFps} />
-
         {/* Blender-matched HDRI orientation counter-offset for model rotation */}
         <EnvRotation x={x} y={y} z={z} />
 
