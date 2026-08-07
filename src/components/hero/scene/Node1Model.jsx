@@ -249,6 +249,16 @@ export default memo(function Node1Model({ startAnimations }) {
           if ('envMapIntensity' in mat) {
             mat.envMapIntensity = 1.2
           }
+          
+          // Disable normal maps on the matte PLA surfaces.
+          // GLTF block compression on fine noise normal maps often produces a visible 4x4 checkerboard/dither artifact.
+          // Disabling it creates the perfectly smooth matte surface requested while preserving exact lighting and roughness.
+          if (mat.normalMap) {
+            mat.normalMap = null
+          }
+          if (mat.normalScale) {
+            mat.normalScale.set(0, 0)
+          }
         }
 
         child.castShadow = true
