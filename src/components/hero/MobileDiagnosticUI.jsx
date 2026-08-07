@@ -1,11 +1,31 @@
+import { useState } from 'react'
 import { useDiagnostic } from './DiagnosticContext'
 
 export default function MobileDiagnosticUI() {
   const diag = useDiagnostic()
+  const [minimized, setMinimized] = useState(false)
+
+  if (minimized) {
+    return (
+      <div className="absolute top-0 right-0 p-4 z-[9999] pointer-events-auto flex justify-end">
+        <button 
+          onClick={() => setMinimized(false)}
+          className="w-auto h-auto px-4 py-2 bg-black/80 backdrop-blur-md rounded border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-2xl"
+        >
+          [+] DIAG
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="absolute top-0 right-0 p-4 z-[9999] max-h-screen overflow-y-auto flex flex-col gap-2 pointer-events-auto w-64 bg-black/80 backdrop-blur-md rounded-bl-xl border-l border-b border-white/10 shadow-2xl">
-      <h3 className="text-white text-xs font-bold mb-2 uppercase tracking-widest text-center text-emerald-400">Diag Mode Active</h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-white text-xs font-bold uppercase tracking-widest text-emerald-400">Diag Mode</h3>
+        <button onClick={() => setMinimized(true)} className="text-white/50 hover:text-white text-xs">
+          [ - ]
+        </button>
+      </div>
       
       <ToggleButton 
         label="1. r3f-perf (FPS)" 
@@ -18,7 +38,7 @@ export default function MobileDiagnosticUI() {
         onClick={() => diag.setUseBoxGeometry(!diag.useBoxGeometry)} 
       />
       <ToggleButton 
-        label="3. BasicMaterial (Kill Lighting Math)" 
+        label="3. BasicMaterial (Kill PBR)" 
         active={diag.useBasicMaterial} 
         onClick={() => diag.setUseBasicMaterial(!diag.useBasicMaterial)} 
       />
@@ -29,7 +49,7 @@ export default function MobileDiagnosticUI() {
         warning={!diag.enableHDRI}
       />
       <ToggleButton 
-        label="5. StandardMaterial (Kill Clearcoat)" 
+        label="5. StandardMat (Kill Clearcoat)" 
         active={diag.useStandardMaterial} 
         onClick={() => diag.setUseStandardMaterial(!diag.useStandardMaterial)} 
       />
@@ -53,7 +73,7 @@ export default function MobileDiagnosticUI() {
       />
 
       <div className="mt-4 p-2 bg-white/5 border border-white/10 rounded text-[10px] text-white/50 leading-tight">
-        Test sequentially on your mobile device. If disabling a feature fixes the stutter, that is the primary bottleneck.
+        Selections are now saved! You can toggle these and physically refresh the page to test the loading sequence.
       </div>
     </div>
   )
