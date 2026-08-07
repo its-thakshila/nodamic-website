@@ -16,9 +16,14 @@ import LoadingScreen from './ui/LoadingScreen'
  */
 export default function Hero() {
   const [isSceneReady, setIsSceneReady] = useState(false)
+  const [isModelRendered, setIsModelRendered] = useState(false)
 
   const handleSceneReady = useCallback(() => {
     setIsSceneReady(true)
+  }, [])
+
+  const handleModelReady = useCallback(() => {
+    setIsModelRendered(true)
   }, [])
 
   return (
@@ -37,7 +42,7 @@ export default function Hero() {
 
       {/* Layer 4 (z-40): React Three Fiber showcase canvas (transparent background) */}
       <WebGLErrorBoundary>
-        <HeroScene startAnimations={isSceneReady} />
+        <HeroScene startAnimations={isSceneReady} onModelReady={handleModelReady} />
       </WebGLErrorBoundary>
 
       {/* Layer 5 (z-50): CSS atmospheric soft diagonal tempered glass reflections */}
@@ -49,7 +54,7 @@ export default function Hero() {
       {/* Layer 7 (z-70): Unifying foreground film grain (~1.8% opacity) */}
       <ForegroundGrainLayer />
 
-      <LoadingScreen onReady={handleSceneReady} />
+      <LoadingScreen onReady={handleSceneReady} isModelRendered={isModelRendered} />
     </section>
   )
 }

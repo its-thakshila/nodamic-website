@@ -58,13 +58,13 @@ function AdaptiveQualityMonitor({ onLowFps }) {
  * Contact shadows, and Post-processing.
  * Canvas background strictly remains transparent to reveal atmospheric layers 0-3.
  */
-export default memo(function HeroScene({ startAnimations }) {
+export default memo(function HeroScene({ startAnimations, onModelReady }) {
   const { x, y, z } = ENVIRONMENT_CONFIG.rotation
   const [isLowFps, setIsLowFps] = useState(false)
   const handleLowFps = useCallback(() => setIsLowFps(true), [])
 
-  const activeToneMapping = DEBUG_FLAGS.toneMapping === 'AgX'
-    ? THREE.AgXToneMapping
+  const activeToneMapping = DEBUG_FLAGS.toneMapping === 'AgX' 
+    ? THREE.AgXToneMapping 
     : THREE.ACESFilmicToneMapping
 
   return (
@@ -105,7 +105,7 @@ export default memo(function HeroScene({ startAnimations }) {
             environmentIntensity={ENVIRONMENT_CONFIG.intensity}
           />
 
-          <Node1Model startAnimations={startAnimations} />
+          <Node1Model startAnimations={startAnimations} onModelReady={onModelReady} />
         </Suspense>
 
         <PostProcessing />

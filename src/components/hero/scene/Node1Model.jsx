@@ -37,7 +37,7 @@ const LED_EMISSIVE_ON = new THREE.Color(MODEL_CONFIG.materials.emissiveColor)
 const LED_EMISSIVE_OFF = new THREE.Color('#000000')
 const HOVER_EMISSIVE_COLOR = new THREE.Color('#ffffff')
 
-export default memo(function Node1Model({ startAnimations }) {
+export default memo(function Node1Model({ startAnimations, onModelReady }) {
   const [isOn, setIsOn] = useState(true)
   const timerRef = useRef(null)
 
@@ -154,13 +154,6 @@ export default memo(function Node1Model({ startAnimations }) {
   useEffect(() => {
     if (!scene) return
 
-    scene.scale.setScalar(normScale)
-    scene.position.set(
-      -centerOffset.x * normScale,
-      -centerOffset.y * normScale,
-      -centerOffset.z * normScale,
-    )
-
     const { materials } = MODEL_CONFIG
 
     scene.traverse((child) => {
@@ -264,7 +257,15 @@ export default memo(function Node1Model({ startAnimations }) {
         mat.needsUpdate = true
       }
     })
-  }, [scene, normScale, centerOffset])
+
+    // After materials are configured, wait for the browser to paint the actual frame.
+    // The double requestAnimationFrame ensures we clear the React render cycle and the WebGL draw call.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (onModelReady) onModelReady()
+      })
+    })
+  }, [scene])
 
   /* ── Attach soft ambient LED Halo sprite ── */
   useEffect(() => {
@@ -418,12 +419,22 @@ export default memo(function Node1Model({ startAnimations }) {
 
   return (
     <group ref={groupRef} position={activePosition} dispose={null}>
-      <primitive
-        object={scene}
-        onClick={handleClick}
-        onPointerMove={handlePointerMove}
-        onPointerOut={handlePointerOut}
-      />
+      {/* Declaratively apply the centering and normalization scale so it is strictly enforced on frame 1 */}
+      <group
+        scale={normScale}
+        position={[
+          -centerOffset.x * normScale,
+          -centerOffset.y * normScale,
+          -centerOffset.z * normScale
+        ]}
+      >
+        <primitive
+          object={scene}
+          onClick={handleClick}
+          onPointerMove={handlePointerMove}
+          onPointerOut={handlePointerOut}
+        />
+      </group>
     </group>
   )
 })

@@ -1,7 +1,7 @@
 import { useProgress } from '@react-three/drei'
 import { useState, useEffect, memo } from 'react'
 
-export default memo(function LoadingScreen({ onReady }) {
+export default memo(function LoadingScreen({ onReady, isModelRendered }) {
   const { progress, active } = useProgress()
   const [fading, setFading] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -9,8 +9,8 @@ export default memo(function LoadingScreen({ onReady }) {
   useEffect(() => {
     let isMounted = true;
     
-    // When everything is loaded (progress reaches 100 AND the Drei loading manager queue is fully empty)
-    if (progress === 100 && !active && !fading && !hidden) {
+    // When everything is downloaded (progress === 100) AND the first WebGL frame is fully painted
+    if (progress === 100 && !active && isModelRendered && !fading && !hidden) {
       // Additionally ensure all standard DOM WebFonts are fully downloaded and rendered
       document.fonts.ready.then(() => {
         if (!isMounted) return;
@@ -22,7 +22,7 @@ export default memo(function LoadingScreen({ onReady }) {
     }
     
     return () => { isMounted = false }
-  }, [progress, active, fading, hidden, onReady])
+  }, [progress, active, isModelRendered, fading, hidden, onReady])
 
   useEffect(() => {
     if (fading) {
