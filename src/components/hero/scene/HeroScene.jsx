@@ -40,7 +40,32 @@ const getStaticDPR = () => {
   const cores = navigator.hardwareConcurrency || 4
 
   if (!isMobile) {
-    // Desktop: 1.5 to 2.0 max
+    // Attempt to detect integrated graphics to clamp DPR for performance
+    try {
+      const canvas = document.createElement('canvas')
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info')
+        if (debugInfo) {
+          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase()
+          // Flag common weak integrated GPUs (Intel HD/UHD/Iris, basic AMD Radeon Graphics APUs).
+          // Note: Apple M-series chips are integrated but highly capable, so they are excluded from this clamp.
+          const isIntegrated = renderer.includes('intel') || 
+                               renderer.includes('uhd') || 
+                               renderer.includes('iris') || 
+                               (renderer.includes('amd') && renderer.includes('radeon') && renderer.includes('graphics'))
+          
+          if (isIntegrated) {
+            console.log('[DPR Heuristic] Integrated GPU detected:', renderer, '-> Clamping DPR to 1.5')
+            return Math.min(dpr, 1.5)
+          }
+        }
+      }
+    } catch (e) {
+      // Fail silently and fallback to default desktop DPR
+    }
+    
+    // Dedicated Desktop GPUs: 1.5 to 2.0 max
     return Math.min(dpr, 2.0)
   }
 
