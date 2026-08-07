@@ -19,10 +19,12 @@ export default function Hero() {
   const [isModelRendered, setIsModelRendered] = useState(false)
 
   const handleSceneReady = useCallback(() => {
+    console.log('[DEBUG] Hero.jsx: handleSceneReady called. isSceneReady becoming true.')
     setIsSceneReady(true)
   }, [])
 
   const handleModelReady = useCallback(() => {
+    console.log('[DEBUG] Hero.jsx: handleModelReady called. isModelRendered becoming true.')
     setIsModelRendered(true)
   }, [])
 

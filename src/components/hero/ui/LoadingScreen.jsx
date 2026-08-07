@@ -9,12 +9,17 @@ export default memo(function LoadingScreen({ onReady, isModelRendered }) {
   useEffect(() => {
     let isMounted = true;
     
+    console.log(`[DEBUG] LoadingScreen.jsx: Progress update - progress=${progress}, active=${active}, isModelRendered=${isModelRendered}, fading=${fading}, hidden=${hidden}`)
+
     // When everything is downloaded (progress === 100) AND the first WebGL frame is fully painted
     if (progress === 100 && !active && isModelRendered && !fading && !hidden) {
+      console.log('[DEBUG] LoadingScreen.jsx: All conditions met (progress=100, active=false, isModelRendered=true). Waiting for fonts...')
+      
       // Additionally ensure all standard DOM WebFonts are fully downloaded and rendered
       document.fonts.ready.then(() => {
         if (!isMounted) return;
         
+        console.log('[DEBUG] LoadingScreen.jsx: Fonts ready. Triggering onReady() and fading out.')
         // Trigger all 3D and UI animations simultaneously at the exact moment the loading screen begins its fade-out
         onReady()
         setFading(true)
@@ -26,20 +31,25 @@ export default memo(function LoadingScreen({ onReady, isModelRendered }) {
 
   useEffect(() => {
     if (fading) {
+      console.log('[DEBUG] LoadingScreen.jsx: Fade out started. Setting 500ms timer for unmount.')
       // Remove from DOM strictly after the 500ms CSS fade out completes
       const hideTimer = setTimeout(() => {
+        console.log('[DEBUG] LoadingScreen.jsx: 500ms timer complete. Setting hidden=true.')
         setHidden(true)
       }, 500)
       return () => clearTimeout(hideTimer)
     }
   }, [fading])
 
+  useEffect(() => {
+    return () => console.log('[DEBUG] LoadingScreen.jsx: Component unmounted.')
+  }, [])
+
   if (hidden) return null
 
   return (
     <div
-      className={`absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0a0a] transition-opacity duration-500 ease-out pointer-events-none`}
-      style={{ opacity: fading ? 0 : 0.99 }}
+      className={`absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0a0a] transition-opacity duration-500 ease-out pointer-events-none ${fading ? 'opacity-0' : 'opacity-100'}`}
     >
       <div className="w-48 h-[2px] bg-white/20 overflow-hidden">
         <div 

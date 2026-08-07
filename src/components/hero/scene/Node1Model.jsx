@@ -263,21 +263,23 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       }
     })
 
-    // Force pre-compile of all materials and geometries in the scene before the first render
-    gl.compile(scene, camera)
+    // Compile shaders and materials synchronously before first render
+    console.log('[DEBUG] Node1Model.jsx: Entering gl.compile()')
+    try {
+      gl.compile(scene, camera)
+      console.log('[DEBUG] Node1Model.jsx: gl.compile() completed successfully.')
+    } catch (error) {
+      console.error('[DEBUG] Node1Model.jsx: gl.compile() threw an exception:', error)
+    }
 
-    // After materials are configured, wait for the browser to paint the actual frame.
-    // The double requestAnimationFrame ensures we clear the React render cycle and the WebGL draw call.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        // Add a deliberate warm-up delay. This gives frameloop="always" time to render
-        // 15-30 frames invisibly in the background, fully warming up the Post-Processing passes
-        // and shadow maps before we drop the loading screen.
-        setTimeout(() => {
-          if (onModelReady) onModelReady()
-        }, 500)
-      })
-    })
+    // Notify the parent that the model's assets and materials are ready
+    if (onModelReady) {
+      console.log('[DEBUG] Node1Model.jsx: Calling onModelReady via setTimeout(0)')
+      // Use a micro-delay to let React commit the tree
+      setTimeout(onModelReady, 0)
+    } else {
+      console.log('[DEBUG] Node1Model.jsx: onModelReady is undefined.')
+    }
   }, [scene])
 
   /* ── Attach soft ambient LED Halo sprite ── */
