@@ -1,8 +1,9 @@
-import { useRef, memo } from 'react'
-import { motion } from 'framer-motion'
+import { useRef, memo, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SquareChevronDownIcon } from './SquareChevronDownIcon'
 import Header from './Header'
 import { UI_CONTENT, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../../config/hero.config'
+import { useScrollState } from '../ScrollContext'
 
 /* ─── Animation Variants ─────────────────────────────────────────────────── */
 const containerVariants = {
@@ -55,6 +56,11 @@ const fadeIn = {
  */
 export default memo(function OverlayUI({ isLoaded = false }) {
   const iconRef = useRef(null)
+  const { activeScreen } = useScrollState() || { activeScreen: 0 }
+  const screenContent = UI_CONTENT.screens[activeScreen] || UI_CONTENT.screens[0]
+
+  // Reset animations when screen changes
+  const animationKey = `screen-${activeScreen}`
 
   return (
     <div
@@ -74,91 +80,108 @@ export default memo(function OverlayUI({ isLoaded = false }) {
 
         {/* Text Group (Maintains a tight, near-constant gap between typography elements on mobile) */}
         <div className="flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0">
-          {/* Main hardware title */}
-          <motion.div
-            className="lg:col-span-7 self-start lg:self-end relative w-full"
-            variants={containerVariants}
-            initial="hidden"
-            animate={isLoaded ? "visible" : "hidden"}
-          >
-            <motion.h1
-              custom={0}
-              variants={fadeUp}
-              className="font-outfit text-[clamp(2.5rem,18.5vw,4.5rem)] md:text-[clamp(4.5rem,9.0vw,8.6rem)] font-[400] leading-[0.88] text-white relative z-10 lg:whitespace-nowrap"
-              style={{ letterSpacing: '-0.035em' }}
-            >
-              {UI_CONTENT.headingTitle}<br />
-              {UI_CONTENT.headingSubtitle}
-            </motion.h1>
-
-            {/* DESKTOP CTA (Absolutely positioned) */}
-            <motion.div custom={1} variants={fadeUpCTA} className="hidden lg:block absolute lg:-bottom-[clamp(2.3rem,3.6vw,3.5rem)] left-0 z-20">
-              <button
-                id="desktop-scroll-btn"
-                className="flex items-center gap-3 pointer-events-auto bg-transparent w-auto h-auto text-white/90 hover:text-white transition-colors duration-300 font-outfit uppercase tracking-[0.18em] lg:text-[clamp(0.7rem,1.1vw,1.05rem)] lg:whitespace-nowrap"
-                onMouseEnter={() => iconRef.current?.startAnimation?.()}
-                onMouseLeave={() => iconRef.current?.stopAnimation?.()}
+          <AnimatePresence mode="wait">
+            {isLoaded && (
+              <motion.div
+                key={`${animationKey}-title`}
+                className="lg:col-span-7 self-start lg:self-end relative w-full"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, y: -20, transition: { duration: 0.4 } }}
               >
-                <SquareChevronDownIcon ref={iconRef} size={20} className="shrink-0" />
-                <span className="leading-none pt-[0.15em]">{UI_CONTENT.ctaButtonText}</span>
-              </button>
-            </motion.div>
-          </motion.div>
+                <motion.h1
+                  custom={0}
+                  variants={fadeUp}
+                  className="font-outfit text-[clamp(2.5rem,18.5vw,4.5rem)] md:text-[clamp(4.5rem,9.0vw,8.6rem)] font-[400] leading-[0.88] text-white relative z-10 lg:whitespace-nowrap"
+                  style={{ letterSpacing: '-0.035em' }}
+                >
+                  {screenContent.headingTitle}<br />
+                  {screenContent.headingSubtitle}
+                </motion.h1>
+
+                {/* DESKTOP CTA (Absolutely positioned) */}
+                <motion.div custom={1} variants={fadeUpCTA} className="hidden lg:block absolute lg:-bottom-[clamp(2.3rem,3.6vw,3.5rem)] left-0 z-20">
+                  <button
+                    id="desktop-scroll-btn"
+                    className="flex items-center gap-3 pointer-events-auto bg-transparent w-auto h-auto text-white/90 hover:text-white transition-colors duration-300 font-outfit uppercase tracking-[0.18em] lg:text-[clamp(0.7rem,1.1vw,1.05rem)] lg:whitespace-nowrap"
+                    onMouseEnter={() => iconRef.current?.startAnimation?.()}
+                    onMouseLeave={() => iconRef.current?.stopAnimation?.()}
+                  >
+                    <SquareChevronDownIcon ref={iconRef} size={20} className="shrink-0" />
+                    <span className="leading-none pt-[0.15em]">{screenContent.ctaButtonText}</span>
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Paragraph */}
-          <motion.div
-            className="flex lg:col-span-5 lg:col-start-8 self-start lg:self-end flex-col items-start lg:items-end justify-end w-full lg:mb-2 lg:justify-self-end"
-            variants={fadeIn}
-            initial="hidden"
-            animate={isLoaded ? "visible" : "hidden"}
-          >
-            <p
-              className="font-outfit text-[clamp(1rem,5.6vw,1.35rem)] sm:text-[1.45rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 text-left lg:text-right lg:whitespace-nowrap"
-              style={{ letterSpacing: '0.001em' }}
-            >
-              {/* Desktop paragraph with specific line breaks */}
-              <span className="hidden lg:inline">
-                {UI_CONTENT.bodyParagraph.desktop.split('\n').map((line, index, array) => (
-                  <span key={`desktop-${index}`}>
-                    {line}
-                    {index < array.length - 1 && <br />}
+          <AnimatePresence mode="wait">
+            {isLoaded && (
+              <motion.div
+                key={`${animationKey}-body`}
+                className="flex lg:col-span-5 lg:col-start-8 self-start lg:self-end flex-col items-start lg:items-end justify-end w-full lg:mb-2 lg:justify-self-end"
+                variants={fadeIn}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, transition: { duration: 0.3 } }}
+              >
+                <p
+                  className="font-outfit text-[clamp(1rem,5.6vw,1.35rem)] sm:text-[1.45rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 text-left lg:text-right lg:whitespace-nowrap"
+                  style={{ letterSpacing: '0.001em' }}
+                >
+                  {/* Desktop paragraph with specific line breaks */}
+                  <span className="hidden lg:inline">
+                    {screenContent.bodyParagraph.desktop.split('\n').map((line, index, array) => (
+                      <span key={`desktop-${index}`}>
+                        {line}
+                        {index < array.length - 1 && <br />}
+                      </span>
+                    ))}
                   </span>
-                ))}
-              </span>
-              
-              {/* Tablet paragraph with tailored line breaks */}
-              <span className="hidden sm:inline lg:hidden">
-                {UI_CONTENT.bodyParagraph.tablet.split('\n').map((line, index, array) => (
-                  <span key={`tablet-${index}`}>
-                    {line}
-                    {index < array.length - 1 && <br />}
+                  
+                  {/* Tablet paragraph with tailored line breaks */}
+                  <span className="hidden sm:inline lg:hidden">
+                    {screenContent.bodyParagraph.tablet.split('\n').map((line, index, array) => (
+                      <span key={`tablet-${index}`}>
+                        {line}
+                        {index < array.length - 1 && <br />}
+                      </span>
+                    ))}
                   </span>
-                ))}
-              </span>
 
-              {/* Mobile paragraph (natural fluid wrapping to prevent orphaned words) */}
-              <span className="sm:hidden">
-                {UI_CONTENT.bodyParagraph.mobile}
-              </span>
-            </p>
-          </motion.div>
+                  {/* Mobile paragraph (natural fluid wrapping to prevent orphaned words) */}
+                  <span className="sm:hidden">
+                    {screenContent.bodyParagraph.mobile}
+                  </span>
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* MOBILE CTA (Restored to exact desktop styling with minimum touch target height) */}
-          <motion.div
-            custom={1}
-            variants={fadeUpCTA}
-            initial="hidden"
-            animate={isLoaded ? "visible" : "hidden"}
-            className="w-full lg:hidden pointer-events-auto shrink-0"
-          >
-            <button
-              id="mobile-scroll-btn"
-              className="flex items-center justify-start gap-3 pointer-events-auto bg-transparent w-full min-h-[48px] text-white/90 hover:text-white transition-colors duration-300 font-outfit uppercase tracking-[0.18em] text-[clamp(0.75rem,3.9vw,0.95rem)]"
-            >
-              <SquareChevronDownIcon size={20} className="shrink-0" />
-              <span className="leading-none pt-[0.15em]">{UI_CONTENT.ctaButtonText}</span>
-            </button>
-          </motion.div>
+          {/* MOBILE CTA */}
+          <AnimatePresence mode="wait">
+            {isLoaded && (
+              <motion.div
+                key={`${animationKey}-mobile-cta`}
+                custom={1}
+                variants={fadeUpCTA}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, y: 10, transition: { duration: 0.3 } }}
+                className="w-full lg:hidden pointer-events-auto shrink-0"
+              >
+                <button
+                  id="mobile-scroll-btn"
+                  className="flex items-center justify-start gap-3 pointer-events-auto bg-transparent w-full min-h-[48px] text-white/90 hover:text-white transition-colors duration-300 font-outfit uppercase tracking-[0.18em] text-[clamp(0.75rem,3.9vw,0.95rem)]"
+                >
+                  <SquareChevronDownIcon size={20} className="shrink-0" />
+                  <span className="leading-none pt-[0.15em]">{screenContent.ctaButtonText}</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

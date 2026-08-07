@@ -39,12 +39,33 @@ export const ANIMATION_TIMING = {
 export const MODEL_CONFIG = {
   path: import.meta.env.BASE_URL + 'models/Node1.glb',
   targetSize: 2.2,
+  // Fallback defaults if screen tracking is off
   position: [0, -0.15, 0],
   baseRotation: {
     x: 1.2,
     y: 0.38,
     z: -0.4,
   },
+  screens: [
+    {
+      // Screen 0: Initial Hero
+      position: [0, -0.15, 0],
+      baseRotation: {
+        x: 1.2,
+        y: 0.38,
+        z: -0.4,
+      }
+    },
+    {
+      // Screen 1: Scrolled Down
+      position: [0.2, -0.15, 0],
+      baseRotation: {
+        x: 1.2,
+        y: -0.38,
+        z: 0.4,
+      }
+    }
+  ],
   mouseSensitivity: {
     x: 0.07,
     y: 0.06,
@@ -83,6 +104,24 @@ export const ENVIRONMENT_CONFIG = {
     y: -0.75,
     z: -1.09,
   },
+  screens: [
+    {
+      // Screen 0: Initial Hero
+      rotation: {
+        x: -1.00,
+        y: -0.75,
+        z: -1.09,
+      }
+    },
+    {
+      // Screen 1: Scrolled Down
+      rotation: {
+        x: 0.17,
+        y: 0.03,
+        z: 1.00,
+      }
+    }
+  ]
 }
 
 /* ─── Complete Studio Photography Lighting Setup ─────────────────────────── */
@@ -113,8 +152,12 @@ export const STUDIO_LIGHTS = {
   },
   overheadLight: {
     position: [0.5, 7.0, 0.5],
-    intensity: 15,
+    intensity: 10,
     color: '#ffffff',
+    screens: [
+      { position: [0.5, 7.0, 0.5], intensity: 10 },
+      { position: [-0.5, 7.0, 0.5], intensity: 25 }
+    ]
   },
   // Hemisphere light starves underside of bounce while illuminating top facets
   hemisphereLight: {
@@ -181,12 +224,26 @@ export const POST_PROCESSING_CONFIG = {
 
 /* ─── UI & Typography Content ────────────────────────────────────────────── */
 export const UI_CONTENT = {
-  headingTitle: 'Unthink the',
-  headingSubtitle: 'Ordinary.',
-  ctaButtonText: 'SCROLL TO DISCOVER',
-  bodyParagraph: {
-    desktop: 'Creating intelligent, minimalist\ntechnology products that redefine\neveryday experiences.',
-    tablet: 'Creating intelligent, minimalist technology products\nthat redefine everyday experiences.',
-    mobile: 'Creating intelligent, minimalist technology products that redefine everyday experiences.',
-  },
+  screens: [
+    {
+      headingTitle: 'Unthink the',
+      headingSubtitle: 'Ordinary.',
+      ctaButtonText: 'SCROLL TO DISCOVER',
+      bodyParagraph: {
+        desktop: 'Creating intelligent, minimalist\ntechnology products that redefine\neveryday experiences.',
+        tablet: 'Creating intelligent, minimalist technology products\nthat redefine everyday experiences.',
+        mobile: 'Creating intelligent, minimalist technology products that redefine everyday experiences.',
+      }
+    },
+    {
+      headingTitle: 'AEROSPACE',
+      headingSubtitle: 'GRADE',
+      ctaButtonText: 'VIEW SPECIFICATIONS',
+      bodyParagraph: {
+        desktop: 'Forged from a single block of titanium.\nThe brushed finish resists fingerprints while\nmaintaining an elegant, tactile temperature.',
+        tablet: 'Forged from a single block of titanium.\nThe brushed finish resists fingerprints.',
+        mobile: 'Forged from a single block of titanium. The brushed finish resists fingerprints while maintaining an elegant, tactile temperature.',
+      }
+    }
+  ]
 }

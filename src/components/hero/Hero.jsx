@@ -12,6 +12,8 @@ import LoadingScreen from './ui/LoadingScreen'
 // import { DiagnosticProvider } from './DiagnosticContext'
 // import MobileDiagnosticUI from './MobileDiagnosticUI'
 
+import { ScrollProvider } from './ScrollContext'
+
 /*
  * Cinematic Layered Hero Architecture
  * Isolated stacking context ensuring strict rendering hierarchy from Layer 0 to Layer 7.
@@ -31,7 +33,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <>
+    <ScrollProvider totalScreens={2}>
       <section className="relative w-full h-[100svh] lg:h-screen overflow-hidden bg-[#0a0a0a] isolate">
         {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}
         <BackgroundLayer />
@@ -63,6 +65,6 @@ export default function Hero() {
 
         {/* <MobileDiagnosticUI /> */}
       </section>
-    </>
+    </ScrollProvider>
   )
 }

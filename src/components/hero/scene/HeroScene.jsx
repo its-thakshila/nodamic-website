@@ -1,5 +1,5 @@
 import { Suspense, useEffect, lazy, memo } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Environment, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
 import { Perf } from 'r3f-perf'
@@ -8,6 +8,7 @@ import PostProcessing from './PostProcessing'
 import StudioLighting from './StudioLighting'
 import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING, DEBUG_FLAGS } from '../../../config/hero.config'
 import { useDiagnostic } from '../DiagnosticContext'
+import { useScrollState } from '../ScrollContext'
 
 // Use 4k fallback if high res flag is true (assuming the user might place a 4k version later, defaults to 1k if unchanged)
 const activeHDRIPath = DEBUG_FLAGS.useHighResHDRI
@@ -16,12 +17,43 @@ const activeHDRIPath = DEBUG_FLAGS.useHighResHDRI
 
 useEnvironment.preload(activeHDRIPath)
 
-/* Applies scene.environmentRotation across all axes */
-function EnvRotation({ x, y, z }) {
+/* Smoothly interpolates scene.environmentRotation across all axes */
+function EnvRotation({ diagHdriRotation }) {
   const { scene } = useThree()
+  const scrollState = useScrollState()
+  const activeScreen = scrollState ? scrollState.activeScreen : 0
+
+  // Instantly snap to the correct rotation on mount/HMR to prevent spinning from [0,0,0]
   useEffect(() => {
-    scene.environmentRotation.set(x, y, z)
-  }, [scene, x, y, z])
+    if (diagHdriRotation) {
+      scene.environmentRotation.set(diagHdriRotation.x, diagHdriRotation.y, diagHdriRotation.z)
+    } else {
+      const targetRot = (ENVIRONMENT_CONFIG.screens && ENVIRONMENT_CONFIG.screens[activeScreen])
+        ? ENVIRONMENT_CONFIG.screens[activeScreen].rotation
+        : ENVIRONMENT_CONFIG.rotation
+      scene.environmentRotation.set(targetRot.x, targetRot.y, targetRot.z)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty dependency array ensures this only runs once on mount, preserving the smooth useFrame damping for actual interactions
+
+  useFrame((state, delta) => {
+    // If diagnostic UI is actively overriding, snap to it instantly
+    if (diagHdriRotation) {
+      scene.environmentRotation.set(diagHdriRotation.x, diagHdriRotation.y, diagHdriRotation.z)
+      return
+    }
+    
+    // Otherwise, damp towards the active screen's target rotation
+    const targetRot = (ENVIRONMENT_CONFIG.screens && ENVIRONMENT_CONFIG.screens[activeScreen])
+      ? ENVIRONMENT_CONFIG.screens[activeScreen].rotation
+      : ENVIRONMENT_CONFIG.rotation
+
+    const safeDelta = Math.min(delta, 0.1)
+    scene.environmentRotation.x = THREE.MathUtils.damp(scene.environmentRotation.x, targetRot.x, 3, safeDelta)
+    scene.environmentRotation.y = THREE.MathUtils.damp(scene.environmentRotation.y, targetRot.y, 3, safeDelta)
+    scene.environmentRotation.z = THREE.MathUtils.damp(scene.environmentRotation.z, targetRot.z, 3, safeDelta)
+  })
+
   return null
 }
 
@@ -97,11 +129,6 @@ const STATIC_DPR = getStaticDPR()
  */
 export default memo(function HeroScene({ startAnimations, onModelReady }) {
   const diag = useDiagnostic()
-  const { x, y, z } = ENVIRONMENT_CONFIG.rotation
-  
-  const activeX = diag?.hdriRotation ? diag.hdriRotation.x : x
-  const activeY = diag?.hdriRotation ? diag.hdriRotation.y : y
-  const activeZ = diag?.hdriRotation ? diag.hdriRotation.z : z
 
   const activeToneMapping = DEBUG_FLAGS.toneMapping === 'AgX' 
     ? THREE.AgXToneMapping 
@@ -125,8 +152,8 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
         style={{ background: 'transparent' }}
       >
         {diag?.showPerf && <Perf position="top-left" />}
-        {/* Blender-matched HDRI orientation counter-offset for model rotation */}
-        <EnvRotation x={activeX} y={activeY} z={activeZ} />
+        {/* Blender-matched HDRI orientation with smooth scroll interpolation */}
+        <EnvRotation diagHdriRotation={diag?.hdriRotation} />
 
         {/* Studio illumination and statically baked contact shadows */}
         <StudioLighting />

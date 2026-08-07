@@ -1,8 +1,10 @@
 import { useRef, useEffect, useMemo, memo } from 'react'
-import { useThree } from '@react-three/fiber'
+import { useThree, useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { ContactShadows } from '@react-three/drei'
 import { STUDIO_LIGHTS } from '../../../config/hero.config'
 import { useDiagnostic } from '../DiagnosticContext'
+import { useScrollState } from '../ScrollContext'
 
 /*
  * Complete Studio Photography Lighting Setup
@@ -24,7 +26,35 @@ export default memo(function StudioLighting() {
   const enableLights = diag ? diag.enableLights : true
   const enableContactShadows = diag ? diag.enableContactShadows : true
 
+  const scrollState = useScrollState()
+  const activeScreen = scrollState ? scrollState.activeScreen : 0
+
   const recessSpotRef = useRef()
+  const overheadLightRef = useRef()
+
+  // Instantly snap overhead light to correct position and intensity on mount/HMR
+  useEffect(() => {
+    if (overheadLightRef.current && overheadLight.screens) {
+      const targetPos = overheadLight.screens[activeScreen]?.position || overheadLight.position
+      const targetIntensity = overheadLight.screens[activeScreen]?.intensity ?? overheadLight.intensity
+      overheadLightRef.current.position.set(targetPos[0], targetPos[1], targetPos[2])
+      overheadLightRef.current.intensity = targetIntensity
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // run once on mount
+
+  useFrame((state, delta) => {
+    if (overheadLightRef.current && overheadLight.screens) {
+      const targetPos = overheadLight.screens[activeScreen]?.position || overheadLight.position
+      const targetIntensity = overheadLight.screens[activeScreen]?.intensity ?? overheadLight.intensity
+      
+      const safeDelta = Math.min(delta, 0.1)
+      overheadLightRef.current.position.x = THREE.MathUtils.damp(overheadLightRef.current.position.x, targetPos[0], 3, safeDelta)
+      overheadLightRef.current.position.y = THREE.MathUtils.damp(overheadLightRef.current.position.y, targetPos[1], 3, safeDelta)
+      overheadLightRef.current.position.z = THREE.MathUtils.damp(overheadLightRef.current.position.z, targetPos[2], 3, safeDelta)
+      overheadLightRef.current.intensity = THREE.MathUtils.damp(overheadLightRef.current.intensity, targetIntensity, 3, safeDelta)
+    }
+  })
 
   // Fluidly interpolate recessLight position starting below 1560px
   const activeRecessPos = useMemo(() => {
@@ -83,7 +113,8 @@ export default memo(function StudioLighting() {
 
       {/* ── 4. Weak Overhead Accent Light ── */}
       <directionalLight
-        position={overheadLight.position}
+        ref={overheadLightRef}
+        position={overheadLight.position} // Initial fallback declarative position
         intensity={overheadLight.intensity}
         color={overheadLight.color}
       />

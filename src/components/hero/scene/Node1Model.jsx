@@ -4,6 +4,7 @@ import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { MODEL_CONFIG, ANIMATION_TIMING } from '../../../config/hero.config'
 import { useDiagnostic } from '../DiagnosticContext'
+import { useScrollState } from '../ScrollContext'
 
 useGLTF.preload(MODEL_CONFIG.path)
 
@@ -45,6 +46,7 @@ const HOVER_EMISSIVE_COLOR = new THREE.Color('#ffffff')
 
 export default memo(function Node1Model({ startAnimations, onModelReady }) {
   const diag = useDiagnostic()
+  const { activeScreen } = useScrollState() || { activeScreen: 0 }
   const [isOn, setIsOn] = useState(true)
   const timerRef = useRef(null)
 
@@ -129,7 +131,10 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
   // Fluid responsive positioning: smoothly moves the model left and up on mobile
   const activePosition = useMemo(() => {
-    const basePos = MODEL_CONFIG.position
+    // Determine the base position based on current active screen
+    const screenConfig = MODEL_CONFIG.screens ? MODEL_CONFIG.screens[activeScreen] : MODEL_CONFIG
+    const basePos = screenConfig.position
+
     if (size.width >= 1024) return basePos
 
     // mobileProgress is 0.0 at 1024px, and 1.0 at 430px
@@ -144,7 +149,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       basePos[1] + (MAX_Y_OFFSET * mobileProgress),
       basePos[2]
     ]
-  }, [size.width])
+  }, [size.width, activeScreen])
 
   // Compute bounding box from original unmodified scene
   const { normScale, centerOffset } = useMemo(() => {
@@ -377,11 +382,40 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       intro.scale = lerp(intro.startScale, 1, ease)
     }
 
-    const activeBaseRot = MODEL_CONFIG.baseRotation
+    // Determine target rotation based on the active screen
+    const activeBaseRot = (MODEL_CONFIG.screens && MODEL_CONFIG.screens[activeScreen]) 
+      ? MODEL_CONFIG.screens[activeScreen].baseRotation 
+      : MODEL_CONFIG.baseRotation
 
-    groupRef.current.rotation.x = activeBaseRot.x + rotation.current.x
-    groupRef.current.rotation.y = activeBaseRot.y + rotation.current.y + intro.yOffset
-    groupRef.current.rotation.z = activeBaseRot.z + intro.zOffset
+    // Smoothly damp the actual rotation towards the target screen rotation
+    // We store the current damped rotation directly in the group's rotation (or a ref) to avoid state
+    if (groupRef.current) {
+      const dampRot = THREE.MathUtils.damp
+      // Safe delta ensures we don't jump too far in one frame
+      const currentBaseRotX = dampRot(groupRef.current.userData.baseRotX ?? activeBaseRot.x, activeBaseRot.x, 3, safeDelta)
+      const currentBaseRotY = dampRot(groupRef.current.userData.baseRotY ?? activeBaseRot.y, activeBaseRot.y, 3, safeDelta)
+      const currentBaseRotZ = dampRot(groupRef.current.userData.baseRotZ ?? activeBaseRot.z, activeBaseRot.z, 3, safeDelta)
+      
+      groupRef.current.userData.baseRotX = currentBaseRotX
+      groupRef.current.userData.baseRotY = currentBaseRotY
+      groupRef.current.userData.baseRotZ = currentBaseRotZ
+
+      groupRef.current.rotation.x = currentBaseRotX + rotation.current.x
+      groupRef.current.rotation.y = currentBaseRotY + rotation.current.y + intro.yOffset
+      groupRef.current.rotation.z = currentBaseRotZ + intro.zOffset
+
+      // Smoothly damp position
+      const currentPosX = dampRot(groupRef.current.userData.posX ?? activePosition[0], activePosition[0], 3, safeDelta)
+      const currentPosY = dampRot(groupRef.current.userData.posY ?? activePosition[1], activePosition[1], 3, safeDelta)
+      const currentPosZ = dampRot(groupRef.current.userData.posZ ?? activePosition[2], activePosition[2], 3, safeDelta)
+
+      groupRef.current.userData.posX = currentPosX
+      groupRef.current.userData.posY = currentPosY
+      groupRef.current.userData.posZ = currentPosZ
+
+      groupRef.current.position.set(currentPosX, currentPosY, currentPosZ)
+    }
+    
     groupRef.current.scale.setScalar(intro.scale)
 
     // 2. High-performance switch translation & LED behavior damping (~200ms mechanical feel)
@@ -456,7 +490,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   }
 
   return (
-    <group ref={groupRef} position={activePosition} dispose={null}>
+    <group ref={groupRef} dispose={null}>
       {/* Declaratively apply the centering and normalization scale so it is strictly enforced on frame 1 */}
       <group
         scale={normScale}
