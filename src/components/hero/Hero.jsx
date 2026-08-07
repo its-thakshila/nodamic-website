@@ -22,7 +22,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative w-full h-screen overflow-hidden bg-[#0a0a0a] isolate">
+    <section className="relative w-full h-[100svh] lg:h-screen overflow-hidden bg-[#0a0a0a] isolate">
       {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}
       <BackgroundLayer />
 
