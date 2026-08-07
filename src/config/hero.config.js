@@ -14,6 +14,19 @@ export const LAYER_Z_INDEX = {
   foregroundGrain: 70 // Layer 7 (z-70): Unifying film grain composition texture
 }
 
+/* ─── Debug & Feature Flags for Rendering Isolation ──────────────────────── */
+export const DEBUG_FLAGS = {
+  toneMapping: 'ACESFilmic', // 'ACESFilmic' or 'AgX'
+  enableVignette: true,
+  enableBloom: true,
+  enableColorGrading: true, // Toggles HueSaturation & BrightnessContrast
+  enableNoise: true,
+  enableSMAA: true,
+  useHighResHDRI: false, // Toggles between 1k and 4k HDRI (fallback to 1k if 4k missing)
+  useSplitGridLight: true, // Toggles between the 2x4 grid and a single large rect light
+  forceFixedDPR: true, // Disables AdaptiveDpr and locks Canvas DPR to 2.0
+}
+
 /* ─── Animation Timing ─────────────────────────────────────────────────────── */
 export const ANIMATION_TIMING = {
   introDelay: 0,    // Model zoom-in starts instantly at 0s

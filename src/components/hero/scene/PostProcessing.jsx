@@ -10,7 +10,7 @@ import {
   SMAA,
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
-import { POST_PROCESSING_CONFIG } from '../../../config/hero.config'
+import { POST_PROCESSING_CONFIG, DEBUG_FLAGS } from '../../../config/hero.config'
 
 export default memo(function PostProcessing() {
   const { bloom, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
@@ -26,43 +26,53 @@ export default memo(function PostProcessing() {
        * Targeted Bloom — luminanceThreshold locked high to strictly target emissive LED dots
        * and bright mirror specular reflections without fogging matte black hardware surfaces.
        */}
-      <Bloom
-        intensity={bloom.intensity}
-        luminanceThreshold={bloom.luminanceThreshold}
-        luminanceSmoothing={bloom.luminanceSmoothing}
-        mipmapBlur={true}
-        radius={bloom.radius}
-      />
+      {DEBUG_FLAGS.enableBloom && (
+        <Bloom
+          intensity={bloom.intensity}
+          luminanceThreshold={bloom.luminanceThreshold}
+          luminanceSmoothing={bloom.luminanceSmoothing}
+          mipmapBlur={true}
+          radius={bloom.radius}
+        />
+      )}
 
       {/*
        * Monochrome Studio Grading Pass
        * Introduces near-complete monochrome halftones while elevating contrast and luminance
        * to ensure rich dynamic range and liquid reflections rather than flat grayscale.
        */}
-      <HueSaturation
-        blendFunction={BlendFunction.NORMAL}
-        saturation={colorGrade.saturation}
-      />
-      <BrightnessContrast
-        brightness={colorGrade.brightness}
-        contrast={colorGrade.contrast}
-      />
+      {DEBUG_FLAGS.enableColorGrading && (
+        <>
+          <HueSaturation
+            blendFunction={BlendFunction.NORMAL}
+            saturation={colorGrade.saturation}
+          />
+          <BrightnessContrast
+            brightness={colorGrade.brightness}
+            contrast={colorGrade.contrast}
+          />
+        </>
+      )}
 
       {/* Subtle photographic sensor grain texture */}
-      <Noise
-        opacity={noise.opacity}
-        blendFunction={BlendFunction.OVERLAY}
-      />
+      {DEBUG_FLAGS.enableNoise && (
+        <Noise
+          opacity={noise.opacity}
+          blendFunction={BlendFunction.OVERLAY}
+        />
+      )}
 
       {/* Perimeter vignette anchoring visual focus centrally onto product geometry */}
-      <Vignette
-        blendFunction={BlendFunction.MULTIPLY}
-        offset={vignette.offset}
-        darkness={vignette.darkness}
-      />
+      {DEBUG_FLAGS.enableVignette && (
+        <Vignette
+          blendFunction={BlendFunction.MULTIPLY}
+          offset={vignette.offset}
+          darkness={vignette.darkness}
+        />
+      )}
 
       {/* Lightweight Subpixel Morphological Antialiasing to smooth harsh geometric edges */}
-      <SMAA />
+      {DEBUG_FLAGS.enableSMAA && <SMAA />}
     </EffectComposer>
   )
 })

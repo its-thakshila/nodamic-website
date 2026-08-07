@@ -5,9 +5,14 @@ import * as THREE from 'three'
 const Node1Model = lazy(() => import('./Node1Model'))
 import PostProcessing from './PostProcessing'
 import StudioLighting from './StudioLighting'
-import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../../config/hero.config'
+import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING, DEBUG_FLAGS } from '../../../config/hero.config'
 
-useEnvironment.preload(ENVIRONMENT_CONFIG.path)
+// Use 4k fallback if high res flag is true (assuming the user might place a 4k version later, defaults to 1k if unchanged)
+const activeHDRIPath = DEBUG_FLAGS.useHighResHDRI
+  ? ENVIRONMENT_CONFIG.path.replace('1k', '4k')
+  : ENVIRONMENT_CONFIG.path
+
+useEnvironment.preload(activeHDRIPath)
 
 /* Applies scene.environmentRotation across all axes */
 function EnvRotation({ x, y, z }) {
@@ -58,6 +63,10 @@ export default memo(function HeroScene({ startAnimations }) {
   const [isLowFps, setIsLowFps] = useState(false)
   const handleLowFps = useCallback(() => setIsLowFps(true), [])
 
+  const activeToneMapping = DEBUG_FLAGS.toneMapping === 'AgX'
+    ? THREE.AgXToneMapping
+    : THREE.ACESFilmicToneMapping
+
   return (
     <div
       className="absolute inset-0 w-full h-full"
@@ -71,16 +80,14 @@ export default memo(function HeroScene({ startAnimations }) {
         id="scene-canvas"
         frameloop="always"
         shadows={{ type: THREE.PCFSoftShadowMap }}
-        // Increase the DPR floor so high-DPI mobiles never drop to an unacceptably low resolution.
-        // We use [1.0, 2.0] for standard and [0.85, 1.5] for low FPS, ensuring it never goes below 0.85.
-        dpr={isLowFps ? [0.85, 1.5] : [1.0, 2.0]}
+        // Use fixed DPR of 2.0 if forced, otherwise fall back to adaptive rules
+        dpr={DEBUG_FLAGS.forceFixedDPR ? 2.0 : (isLowFps ? [0.85, 1.5] : [1.0, 2.0])}
         camera={CAMERA_CONFIG}
-        gl={GL_CONFIG}
+        gl={{ ...GL_CONFIG, toneMapping: activeToneMapping }}
         style={{ background: 'transparent' }}
       >
-        {/* Remove 'pixelated' to ensure the browser uses smooth bilinear scaling when the resolution drops, 
-            which masks the lowered resolution instead of creating harsh checkerboard aliases. */}
-        <AdaptiveDpr />
+        {/* Completely disable AdaptiveDpr if forceFixedDPR is true */}
+        {!DEBUG_FLAGS.forceFixedDPR && <AdaptiveDpr />}
         <AdaptiveEvents />
         <AdaptiveQualityMonitor onLowFps={handleLowFps} />
 
@@ -93,7 +100,7 @@ export default memo(function HeroScene({ startAnimations }) {
         <Suspense fallback={<LoadingFallback />}>
           {/* background={false} ensures dark atmosphere remains unbrightened */}
           <Environment
-            files={ENVIRONMENT_CONFIG.path}
+            files={activeHDRIPath}
             background={false}
             environmentIntensity={ENVIRONMENT_CONFIG.intensity}
           />

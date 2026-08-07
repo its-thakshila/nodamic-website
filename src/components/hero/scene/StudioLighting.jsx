@@ -2,7 +2,7 @@ import { useRef, useEffect, useMemo, memo } from 'react'
 import { useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
-import { STUDIO_LIGHTS } from '../../../config/hero.config'
+import { STUDIO_LIGHTS, DEBUG_FLAGS } from '../../../config/hero.config'
 
 RectAreaLightUniformsLib.init()
 
@@ -94,17 +94,28 @@ export default memo(function StudioLighting() {
         position={keyRectLight.position}
         rotation={keyRectLight.rotation || [0, 0, 0]}
       >
-        {tiles.map((tile) => (
+        {DEBUG_FLAGS.useSplitGridLight ? (
+          tiles.map((tile) => (
+            <rectAreaLight
+              key={tile.key}
+              position={tile.position}
+              rotation={[0, Math.PI, 0]} // Flip 180 deg so emitting +Z plane faces along group's aimed -Z targeting axis
+              width={tileW}
+              height={tileH}
+              intensity={keyRectLight.intensity}
+              color={keyRectLight.color}
+            />
+          ))
+        ) : (
           <rectAreaLight
-            key={tile.key}
-            position={tile.position}
-            rotation={[0, Math.PI, 0]} // Flip 180 deg so emitting +Z plane faces along group's aimed -Z targeting axis
-            width={tileW}
-            height={tileH}
+            position={[0, 0, 0]}
+            rotation={[0, Math.PI, 0]}
+            width={keyRectLight.width || 5}
+            height={keyRectLight.height || 10}
             intensity={keyRectLight.intensity}
             color={keyRectLight.color}
           />
-        ))}
+        )}
       </group>
 
       {/* ── 2. Localized Grazing Spotlight (Illuminates right half of center circular recess) ── */}
