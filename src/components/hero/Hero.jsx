@@ -9,8 +9,8 @@ import OverlayUI from './ui/OverlayUI'
 import ForegroundGrainLayer from './layers/ForegroundGrainLayer'
 import WebGLErrorBoundary from './scene/WebGLErrorBoundary'
 import LoadingScreen from './ui/LoadingScreen'
-import { DiagnosticProvider } from './DiagnosticContext'
-import MobileDiagnosticUI from './MobileDiagnosticUI'
+// import { DiagnosticProvider } from './DiagnosticContext'
+// import MobileDiagnosticUI from './MobileDiagnosticUI'
 
 /*
  * Cinematic Layered Hero Architecture
@@ -31,7 +31,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <DiagnosticProvider>
+    <>
       <section className="relative w-full h-[100svh] lg:h-screen overflow-hidden bg-[#0a0a0a] isolate">
         {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}
         <BackgroundLayer />
@@ -61,8 +61,8 @@ export default function Hero() {
 
         <LoadingScreen onReady={handleSceneReady} isModelRendered={isModelRendered} />
 
-        <MobileDiagnosticUI />
+        {/* <MobileDiagnosticUI /> */}
       </section>
-    </DiagnosticProvider>
+    </>
   )
 }

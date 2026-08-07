@@ -56,7 +56,7 @@ export const MODEL_CONFIG = {
      * - Increase acrylicRoughness & clearcoatRoughness (e.g. 0.15 to 0.22) to blur and soften reflected light tile edges!
      * - Lower values (< 0.05) result in sharp, mirror-crisp rectangular light boundaries.
      */
-    acrylicRoughness: 0.08, // Blurs reflected studio grid tiles into smoothly diffused highlights
+    acrylicRoughness: 0.1, // Blurs reflected studio grid tiles into smoothly diffused highlights
     metalnessFloor: 0.15,
     roughnessMultiplier: 0.65,
     clearcoat: 1.0,
