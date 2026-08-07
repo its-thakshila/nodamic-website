@@ -11,6 +11,11 @@ function lerp(a, b, t) {
   return a + (b - a) * t
 }
 
+/* ─── Easing Functions ────────────────────────────────────────────────────── */
+function easeInOutCubic(x) {
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
+}
+
 /* ─── Radial Halo Texture Generator ───────────────────────────────────────── */
 function createHaloTexture() {
   if (typeof document === 'undefined') return null
@@ -87,7 +92,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   // Load intro animation — starts at offset from baseRotation, decays to zero after a short delay
   // Initial: y: 0.5, z: -0.48  →  Target: y: 0.38, z: -0.4  (deltas: y +0.12, z -0.08)
   const introRef = useRef({
-    elapsed: 0,
+    startTime: null,
     started: false,
     startY: 0.5 - MODEL_CONFIG.baseRotation.y,
     startZ: -0.48 - MODEL_CONFIG.baseRotation.z,
@@ -310,8 +315,11 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   }, [scene])
 
   /* ── Animation loop (60 FPS interpolation without React re-renders) ── */
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!groupRef.current) return
+
+    // Cap delta to prevent massive jumps after browser tab switches or heavy load (max 20fps equivalent step)
+    const safeDelta = Math.min(delta, 0.05)
 
     // 1. High-performance rotation drift
     const sensitivityMultiplier = Math.max(1.0, Math.min(3.0, 1920 / size.width))
@@ -325,22 +333,22 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     rotation.current.x = lerp(rotation.current.x, targetX, MODEL_CONFIG.lerpFactor)
     rotation.current.y = lerp(rotation.current.y, targetY, MODEL_CONFIG.lerpFactor)
 
-    // Intro load animation — damp rotation offsets and scale to rest after a short delay
+    // Intro load animation — smoothly driven by absolute clock time, totally immune to frame drops!
     const intro = introRef.current
     if (startAnimations) {
-      if (!intro.started) {
-        intro.elapsed += delta
-      } else if (intro.elapsed - INTRO_DELAY < ANIMATION_TIMING.duration) {
-        intro.elapsed += delta
+      if (intro.startTime === null) {
+        intro.startTime = state.clock.elapsedTime + INTRO_DELAY
+      }
+      
+      if (state.clock.elapsedTime >= intro.startTime && !intro.started) {
+        intro.started = true
       }
     }
 
-    if (!intro.started && intro.elapsed >= INTRO_DELAY) {
-      intro.started = true
-    }
     if (intro.started) {
-      const progress = Math.min(1, (intro.elapsed - INTRO_DELAY) / ANIMATION_TIMING.duration)
-      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+      const rawProgress = (state.clock.elapsedTime - intro.startTime) / ANIMATION_TIMING.duration
+      const progress = Math.max(0, Math.min(1, rawProgress))
+      const ease = easeInOutCubic(progress)
 
       intro.yOffset = lerp(intro.startY, 0, ease)
       intro.zOffset = lerp(intro.startZ, 0, ease)
@@ -360,9 +368,9 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     const targetHaloOpacity = isOn ? 0.85 : 0
 
     const damp = THREE.MathUtils.damp
-    animValues.current.switchZ = damp(animValues.current.switchZ, targetZ, 16, delta)
-    animValues.current.emissive = damp(animValues.current.emissive, targetEmissive, 12, delta)
-    animValues.current.haloOpacity = damp(animValues.current.haloOpacity, targetHaloOpacity, 12, delta)
+    animValues.current.switchZ = damp(animValues.current.switchZ, targetZ, 16, safeDelta)
+    animValues.current.emissive = damp(animValues.current.emissive, targetEmissive, 12, safeDelta)
+    animValues.current.haloOpacity = damp(animValues.current.haloOpacity, targetHaloOpacity, 12, safeDelta)
 
     // Directly mutate Three.js instances without triggering React state changes
     if (switchMeshRef.current) {

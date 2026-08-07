@@ -38,7 +38,8 @@ export default memo(function LoadingScreen({ onReady, isModelRendered }) {
 
   return (
     <div
-      className={`absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0a0a] transition-opacity duration-500 ease-out pointer-events-none ${fading ? 'opacity-0' : 'opacity-100'}`}
+      className={`absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0a0a] transition-opacity duration-500 ease-out pointer-events-none`}
+      style={{ opacity: fading ? 0 : 0.99 }}
     >
       <div className="w-48 h-[2px] bg-white/20 overflow-hidden">
         <div 

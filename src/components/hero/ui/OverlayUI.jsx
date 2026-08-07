@@ -23,6 +23,19 @@ const fadeUp = {
   },
 }
 
+const fadeUpCTA = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: ANIMATION_TIMING.duration,
+      ease: [0.16, 1, 0.3, 1],
+      delay: ANIMATION_TIMING.ctaDelay
+    },
+  },
+}
+
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: {
@@ -79,7 +92,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
             </motion.h1>
 
             {/* DESKTOP CTA (Absolutely positioned) */}
-            <motion.div custom={1} variants={fadeUp} className="hidden lg:block absolute lg:-bottom-[clamp(2.3rem,3.6vw,3.5rem)] left-0 z-20">
+            <motion.div custom={1} variants={fadeUpCTA} className="hidden lg:block absolute lg:-bottom-[clamp(2.3rem,3.6vw,3.5rem)] left-0 z-20">
               <button
                 id="desktop-scroll-btn"
                 className="flex items-center gap-3 pointer-events-auto bg-transparent w-auto h-auto text-white/90 hover:text-white transition-colors duration-300 font-outfit uppercase tracking-[0.18em] lg:text-[clamp(0.7rem,1.1vw,1.05rem)] lg:whitespace-nowrap"
@@ -133,7 +146,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
           {/* MOBILE CTA (Restored to exact desktop styling with minimum touch target height) */}
           <motion.div
             custom={1}
-            variants={fadeUp}
+            variants={fadeUpCTA}
             initial="hidden"
             animate={isLoaded ? "visible" : "hidden"}
             className="w-full lg:hidden pointer-events-auto shrink-0"
