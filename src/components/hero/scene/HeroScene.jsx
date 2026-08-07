@@ -71,12 +71,16 @@ export default memo(function HeroScene({ startAnimations }) {
         id="scene-canvas"
         frameloop="always"
         shadows={{ type: THREE.PCFSoftShadowMap }}
-        dpr={isLowFps ? [0.75, 1.0] : [1, 1.5]}
+        // Increase the DPR floor so high-DPI mobiles never drop to an unacceptably low resolution.
+        // We use [1.0, 2.0] for standard and [0.85, 1.5] for low FPS, ensuring it never goes below 0.85.
+        dpr={isLowFps ? [0.85, 1.5] : [1.0, 2.0]}
         camera={CAMERA_CONFIG}
         gl={GL_CONFIG}
         style={{ background: 'transparent' }}
       >
-        <AdaptiveDpr pixelated />
+        {/* Remove 'pixelated' to ensure the browser uses smooth bilinear scaling when the resolution drops, 
+            which masks the lowered resolution instead of creating harsh checkerboard aliases. */}
+        <AdaptiveDpr />
         <AdaptiveEvents />
         <AdaptiveQualityMonitor onLowFps={handleLowFps} />
 
