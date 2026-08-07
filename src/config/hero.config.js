@@ -29,9 +29,9 @@ export const DEBUG_FLAGS = {
 
 /* ─── Animation Timing ─────────────────────────────────────────────────────── */
 export const ANIMATION_TIMING = {
-  introDelay: 0,    // Model zoom-in starts instantly at 0s
-  textDelay: 0.4,   // Text waits 0.8s for the model to become clearly visible during its 1.5s zoom
-  duration: 1.5,    // Unified duration for the animations themselves
+  introDelay: 0.5,    // Model zoom-in waits 0.5s for the CSS loading screen to completely fade out
+  textDelay: 0.9,     // Text waits slightly longer so model begins moving first
+  duration: 1.5,      // Unified duration for the animations themselves
 }
 
 /* ─── Model Configuration ────────────────────────────────────────────────── */

@@ -80,8 +80,6 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
       className="absolute inset-0 w-full h-full"
       style={{
         zIndex: LAYER_Z_INDEX.heroScene,
-        opacity: startAnimations ? 1 : 0,
-        transition: `opacity 1.5s ease-out ${ANIMATION_TIMING.introDelay}s`,
       }}
     >
       <Canvas
