@@ -1,4 +1,4 @@
-import { Suspense, useEffect, lazy, memo, useState } from 'react'
+import { Suspense, useEffect, lazy, memo } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
@@ -75,19 +75,6 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
     ? THREE.AgXToneMapping 
     : THREE.ACESFilmicToneMapping
 
-  const [isHeavyRenderEnabled, setIsHeavyRenderEnabled] = useState(false)
-
-  useEffect(() => {
-    if (startAnimations) {
-      // Defer all expensive rendering until the model has fully settled into its final pose
-      const durationMs = (ANIMATION_TIMING.duration + ANIMATION_TIMING.introDelay) * 1000
-      const timer = setTimeout(() => {
-        setIsHeavyRenderEnabled(true)
-      }, durationMs)
-      return () => clearTimeout(timer)
-    }
-  }, [startAnimations])
-
   return (
     <div
       className="absolute inset-0 w-full h-full"
@@ -109,7 +96,7 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
         <EnvRotation x={x} y={y} z={z} />
 
         {/* Studio illumination and statically baked contact shadows */}
-        <StudioLighting isHeavyRenderEnabled={isHeavyRenderEnabled} />
+        <StudioLighting />
 
         <Suspense fallback={<LoadingFallback />}>
           {/* background={false} ensures dark atmosphere remains unbrightened */}
@@ -122,7 +109,7 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
           <Node1Model startAnimations={startAnimations} onModelReady={onModelReady} />
         </Suspense>
 
-        <PostProcessing isHeavyRenderEnabled={isHeavyRenderEnabled} />
+        <PostProcessing />
       </Canvas>
     </div>
   )
