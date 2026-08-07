@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { MODEL_CONFIG, ANIMATION_TIMING } from '../../../config/hero.config'
+import { useDiagnostic } from '../DiagnosticContext'
 
 useGLTF.preload(MODEL_CONFIG.path)
 
@@ -43,6 +44,7 @@ const LED_EMISSIVE_OFF = new THREE.Color('#000000')
 const HOVER_EMISSIVE_COLOR = new THREE.Color('#ffffff')
 
 export default memo(function Node1Model({ startAnimations, onModelReady }) {
+  const diag = useDiagnostic()
   const [isOn, setIsOn] = useState(true)
   const timerRef = useRef(null)
 
@@ -215,7 +217,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
           child.raycast = () => null
         }
 
-        const mat = child.material
+        let mat = child.material
         const matName = (mat.name || '').toLowerCase()
 
         // Remove baked environment maps so dynamic studio HDRI drives reflections
@@ -228,18 +230,30 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
           meshName.includes('indicator') || meshName.includes('dot') || meshName.includes('glow')
 
         if (isAcrylic) {
-          // STRICTLY apply glossy tempered glass overrides ONLY to the 'Acrylic Plate'
-          if ('envMapIntensity' in mat) mat.envMapIntensity = materials.envMapIntensity
-          if (mat.roughness !== undefined) {
-            const floorRoughness = materials.acrylicRoughness ?? 0.02
-            mat.roughness = Math.max(floorRoughness, mat.roughness * materials.roughnessMultiplier)
-          }
-          if (mat.metalness !== undefined) {
-            mat.metalness = Math.max(mat.metalness, materials.metalnessFloor)
-          }
-          if ('clearcoat' in mat || mat.isMeshPhysicalMaterial) {
-            mat.clearcoat = materials.clearcoat
-            mat.clearcoatRoughness = materials.clearcoatRoughness
+          // Diagnostic override: StandardMaterial instead of PhysicalMaterial
+          if (diag && diag.useStandardMaterial && mat.isMeshPhysicalMaterial) {
+            const stdMat = new THREE.MeshStandardMaterial({
+              color: mat.color,
+              roughness: mat.roughness,
+              metalness: mat.metalness,
+              map: mat.map
+            })
+            child.material = stdMat
+            mat = stdMat
+          } else {
+            // STRICTLY apply glossy tempered glass overrides ONLY to the 'Acrylic Plate'
+            if ('envMapIntensity' in mat) mat.envMapIntensity = materials.envMapIntensity
+            if (mat.roughness !== undefined) {
+              const floorRoughness = materials.acrylicRoughness ?? 0.02
+              mat.roughness = Math.max(floorRoughness, mat.roughness * materials.roughnessMultiplier)
+            }
+            if (mat.metalness !== undefined) {
+              mat.metalness = Math.max(mat.metalness, materials.metalnessFloor)
+            }
+            if ('clearcoat' in mat || mat.isMeshPhysicalMaterial) {
+              mat.clearcoat = materials.clearcoat
+              mat.clearcoatRoughness = materials.clearcoatRoughness
+            }
           }
         } else if (!isLED) {
           // For BlackPLA, BlackPLA Dark, Brass Terminal: preserve exact authored roughness & metalness!
@@ -259,7 +273,19 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
           ledMaterialRef.current = mat
         }
 
-        mat.needsUpdate = true
+        // Diagnostic override: Force BasicMaterial for EVERYTHING
+        if (diag && diag.useBasicMaterial) {
+          const basicMat = new THREE.MeshBasicMaterial({
+            color: isLED ? materials.emissiveColor : mat.color || 0x888888,
+            map: mat.map || null
+          })
+          child.material = basicMat
+          if (isLED) {
+            ledMaterialRef.current = basicMat
+          }
+        } else {
+          mat.needsUpdate = true
+        }
       }
     })
 
@@ -446,12 +472,19 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
           -centerOffset.z * normScale
         ]}
       >
-        <primitive
-          object={scene}
-          onClick={handleClick}
-          onPointerMove={handlePointerMove}
-          onPointerOut={handlePointerOut}
-        />
+        {diag && diag.useBoxGeometry ? (
+          <mesh scale={[10, 10, 10]}>
+            <boxGeometry />
+            <meshStandardMaterial color="#888888" />
+          </mesh>
+        ) : (
+          <primitive
+            object={scene}
+            onClick={handleClick}
+            onPointerMove={handlePointerMove}
+            onPointerOut={handlePointerOut}
+          />
+        )}
       </group>
     </group>
   )

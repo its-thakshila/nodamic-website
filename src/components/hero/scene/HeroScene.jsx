@@ -2,10 +2,12 @@ import { Suspense, useEffect, lazy, memo } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
+import { Perf } from 'r3f-perf'
 const Node1Model = lazy(() => import('./Node1Model'))
 import PostProcessing from './PostProcessing'
 import StudioLighting from './StudioLighting'
 import { ENVIRONMENT_CONFIG, CAMERA_CONFIG, GL_CONFIG, LAYER_Z_INDEX, ANIMATION_TIMING, DEBUG_FLAGS } from '../../../config/hero.config'
+import { useDiagnostic } from '../DiagnosticContext'
 
 // Use 4k fallback if high res flag is true (assuming the user might place a 4k version later, defaults to 1k if unchanged)
 const activeHDRIPath = DEBUG_FLAGS.useHighResHDRI
@@ -70,6 +72,7 @@ const STATIC_DPR = getStaticDPR()
  */
 export default memo(function HeroScene({ startAnimations, onModelReady }) {
   const { x, y, z } = ENVIRONMENT_CONFIG.rotation
+  const diag = useDiagnostic()
 
   const activeToneMapping = DEBUG_FLAGS.toneMapping === 'AgX' 
     ? THREE.AgXToneMapping 
@@ -92,6 +95,7 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
         gl={{ ...GL_CONFIG, toneMapping: activeToneMapping }}
         style={{ background: 'transparent' }}
       >
+        {diag?.showPerf && <Perf position="top-left" />}
         {/* Blender-matched HDRI orientation counter-offset for model rotation */}
         <EnvRotation x={x} y={y} z={z} />
 
@@ -100,11 +104,13 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
 
         <Suspense fallback={<LoadingFallback />}>
           {/* background={false} ensures dark atmosphere remains unbrightened */}
-          <Environment
-            files={activeHDRIPath}
-            background={false}
-            environmentIntensity={ENVIRONMENT_CONFIG.intensity}
-          />
+          {(diag ? diag.enableHDRI : true) && (
+            <Environment
+              files={activeHDRIPath}
+              background={false}
+              environmentIntensity={ENVIRONMENT_CONFIG.intensity}
+            />
+          )}
 
           <Node1Model startAnimations={startAnimations} onModelReady={onModelReady} />
         </Suspense>

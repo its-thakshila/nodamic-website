@@ -11,9 +11,13 @@ import {
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { POST_PROCESSING_CONFIG, DEBUG_FLAGS } from '../../../config/hero.config'
+import { useDiagnostic } from '../DiagnosticContext'
 
 export default memo(function PostProcessing() {
   const { bloom, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
+  const diag = useDiagnostic()
+
+  if (diag && !diag.enablePostProcessing) return null
 
   return (
     <EffectComposer

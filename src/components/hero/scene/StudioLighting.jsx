@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 import { STUDIO_LIGHTS, DEBUG_FLAGS } from '../../../config/hero.config'
+import { useDiagnostic } from '../DiagnosticContext'
 
 RectAreaLightUniformsLib.init()
 
@@ -24,6 +25,10 @@ export default memo(function StudioLighting() {
     hemisphereLight,
     contactShadows,
   } = STUDIO_LIGHTS
+
+  const diag = useDiagnostic()
+  const enableLights = diag ? diag.enableLights : true
+  const enableContactShadows = diag ? diag.enableContactShadows : true
 
   const rectGroupRef = useRef()
   const recessSpotRef = useRef()
@@ -88,8 +93,10 @@ export default memo(function StudioLighting() {
 
   return (
     <>
-      {/* ── 1. Rectangular Key Light Bank (Tiled Studio Grid Softbox) ── */}
-      <group
+      {enableLights && (
+        <>
+          {/* ── 1. Rectangular Key Light Bank (Tiled Studio Grid Softbox) ── */}
+          <group
         ref={rectGroupRef}
         position={keyRectLight.position}
         rotation={keyRectLight.rotation || [0, 0, 0]}
@@ -158,13 +165,16 @@ export default memo(function StudioLighting() {
       />
 
       {/* ── 5. Studio Hemisphere Bounce (Darkens underside by using black ground color) ── */}
-      <hemisphereLight
-        skyColor={hemisphereLight.skyColor}
-        groundColor={hemisphereLight.groundColor}
-        intensity={hemisphereLight.intensity}
-      />
+          <hemisphereLight
+            skyColor={hemisphereLight.skyColor}
+            groundColor={hemisphereLight.groundColor}
+            intensity={hemisphereLight.intensity}
+          />
+        </>
+      )}
 
-      <ContactShadows
+      {enableContactShadows && (
+        <ContactShadows
         frames={1}
         position={contactShadows.position}
         opacity={contactShadows.opacity}
@@ -174,6 +184,7 @@ export default memo(function StudioLighting() {
         color={contactShadows.color}
         resolution={1024}
       />
+      )}
     </>
   )
 })

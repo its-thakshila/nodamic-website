@@ -9,6 +9,8 @@ import OverlayUI from './ui/OverlayUI'
 import ForegroundGrainLayer from './layers/ForegroundGrainLayer'
 import WebGLErrorBoundary from './scene/WebGLErrorBoundary'
 import LoadingScreen from './ui/LoadingScreen'
+import { DiagnosticProvider } from './DiagnosticContext'
+import MobileDiagnosticUI from './MobileDiagnosticUI'
 
 /*
  * Cinematic Layered Hero Architecture
@@ -29,34 +31,38 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative w-full h-[100svh] lg:h-screen overflow-hidden bg-[#0a0a0a] isolate">
-      {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}
-      <BackgroundLayer />
+    <DiagnosticProvider>
+      <section className="relative w-full h-[100svh] lg:h-screen overflow-hidden bg-[#0a0a0a] isolate">
+        {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}
+        <BackgroundLayer />
 
-      {/* Layer 1 (z-10): Very subtle procedural base texture grain */}
-      <NoiseLayer />
+        {/* Layer 1 (z-10): Very subtle procedural base texture grain */}
+        <NoiseLayer />
 
-      {/* Layer 2 (z-20): Large cinematic studio softbox light beam with drift */}
-      <LightBeamLayer />
+        {/* Layer 2 (z-20): Large cinematic studio softbox light beam with drift */}
+        <LightBeamLayer />
 
-      {/* Layer 3 (z-30): Soft separation glow positioned directly behind the product */}
-      <RadialGlowLayer />
+        {/* Layer 3 (z-30): Soft separation glow positioned directly behind the product */}
+        <RadialGlowLayer />
 
-      {/* Layer 4 (z-40): React Three Fiber showcase canvas (transparent background) */}
-      <WebGLErrorBoundary>
-        <HeroScene startAnimations={isSceneReady} onModelReady={handleModelReady} />
-      </WebGLErrorBoundary>
+        {/* Layer 4 (z-40): React Three Fiber showcase canvas (transparent background) */}
+        <WebGLErrorBoundary>
+          <HeroScene startAnimations={isSceneReady} onModelReady={handleModelReady} />
+        </WebGLErrorBoundary>
 
-      {/* Layer 5 (z-50): CSS atmospheric soft diagonal tempered glass reflections */}
-      <ReflectionLayer />
+        {/* Layer 5 (z-50): CSS atmospheric soft diagonal tempered glass reflections */}
+        <ReflectionLayer />
 
-      {/* Layer 6 (z-60): All interactive elements (Logo, Nav, Title, Paragraph, CTA) */}
-      <OverlayUI isLoaded={isSceneReady} />
+        {/* Layer 6 (z-60): All interactive elements (Logo, Nav, Title, Paragraph, CTA) */}
+        <OverlayUI isLoaded={isSceneReady} />
 
-      {/* Layer 7 (z-70): Unifying foreground film grain (~1.8% opacity) */}
-      <ForegroundGrainLayer />
+        {/* Layer 7 (z-70): Unifying foreground film grain (~1.8% opacity) */}
+        <ForegroundGrainLayer />
 
-      <LoadingScreen onReady={handleSceneReady} isModelRendered={isModelRendered} />
-    </section>
+        <LoadingScreen onReady={handleSceneReady} isModelRendered={isModelRendered} />
+
+        <MobileDiagnosticUI />
+      </section>
+    </DiagnosticProvider>
   )
 }
