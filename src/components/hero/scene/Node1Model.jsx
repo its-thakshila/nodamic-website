@@ -105,6 +105,17 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     zOffset: -0.48 - MODEL_CONFIG.baseRotation.z,
     scale: 0.72,
   })
+
+  const screenTransitionRef = useRef({
+    startTime: null,
+    isTransitioning: false,
+    duration: 2.2, // increased total delay for cinematic ease
+    lastScreen: 0,
+    startRot: { x: 0, y: 0, z: 0 },
+    startPos: [0, 0, 0],
+    startOffset: { x: 0, y: 0 }
+  })
+
   const INTRO_DELAY = ANIMATION_TIMING.introDelay  // seconds before the settle animation begins
 
   // For mobile, we no longer shift the 3D position to avoid breaking reflections/lighting.
@@ -124,7 +135,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     box.getSize(sz)
     box.getCenter(center)
     const maxAxis = Math.max(sz.x, sz.y, sz.z)
-    
+
     // Only perform static normalization here. Responsive scaling is handled smoothly in useFrame.
     return { normScale: MODEL_CONFIG.targetSize / maxAxis, centerOffset: center }
   }, [originalScene])
@@ -212,7 +223,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
             child.material = stdMat
             mat = stdMat
           }
-          
+
           // STRICTLY apply glossy tempered glass overrides ONLY to the 'Acrylic Plate'
           if (mat.roughness !== undefined) {
             const floorRoughness = materials.acrylicRoughness ?? 0.02
@@ -333,7 +344,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       if (intro.startTime === null) {
         intro.startTime = state.clock.elapsedTime + INTRO_DELAY
       }
-      
+
       if (state.clock.elapsedTime >= intro.startTime && !intro.started) {
         intro.started = true
       }
@@ -350,65 +361,129 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     }
 
     // Determine target rotation based on the active screen
-    const activeBaseRot = (MODEL_CONFIG.screens && MODEL_CONFIG.screens[activeScreen]) 
-      ? MODEL_CONFIG.screens[activeScreen].baseRotation 
+    const activeBaseRot = (MODEL_CONFIG.screens && MODEL_CONFIG.screens[activeScreen])
+      ? MODEL_CONFIG.screens[activeScreen].baseRotation
       : MODEL_CONFIG.baseRotation
 
     // Smoothly damp the actual rotation towards the target screen rotation
     // We store the current damped rotation directly in the group's rotation (or a ref) to avoid state
     if (groupRef.current) {
-      const dampRot = THREE.MathUtils.damp
-      // Safe delta ensures we don't jump too far in one frame
-      const currentBaseRotX = dampRot(groupRef.current.userData.baseRotX ?? activeBaseRot.x, activeBaseRot.x, 3, safeDelta)
-      const currentBaseRotY = dampRot(groupRef.current.userData.baseRotY ?? activeBaseRot.y, activeBaseRot.y, 3, safeDelta)
-      const currentBaseRotZ = dampRot(groupRef.current.userData.baseRotZ ?? activeBaseRot.z, activeBaseRot.z, 3, safeDelta)
-      
-      groupRef.current.userData.baseRotX = currentBaseRotX
-      groupRef.current.userData.baseRotY = currentBaseRotY
-      groupRef.current.userData.baseRotZ = currentBaseRotZ
-
-      groupRef.current.rotation.x = currentBaseRotX + rotation.current.x
-      groupRef.current.rotation.y = currentBaseRotY + rotation.current.y + intro.yOffset
-      groupRef.current.rotation.z = currentBaseRotZ + intro.zOffset
-
-      // Smoothly damp position
-      const currentPosX = dampRot(groupRef.current.userData.posX ?? activePosition[0], activePosition[0], 3, safeDelta)
-      const currentPosY = dampRot(groupRef.current.userData.posY ?? activePosition[1], activePosition[1], 3, safeDelta)
-      const currentPosZ = dampRot(groupRef.current.userData.posZ ?? activePosition[2], activePosition[2], 3, safeDelta)
-
-      groupRef.current.userData.posX = currentPosX
-      groupRef.current.userData.posY = currentPosY
-      groupRef.current.userData.posZ = currentPosZ
-
-      groupRef.current.position.set(currentPosX, currentPosY, currentPosZ)
-
       // -------------------------------------------------------------
-      // 2D Viewport Shifting for Mobile
+      // Calculate target 2D Viewport Shifting for Mobile
       // -------------------------------------------------------------
       const globalViewConf = MODEL_CONFIG.mobileConfig.viewOffset
       let targetOffsetX = 0
       let targetOffsetY = 0
-      
+
       if (state.size.width < globalViewConf.breakpoint) {
-        const pConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation 
+        const pConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation
           ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.viewOffset || globalViewConf)
           : globalViewConf
 
         const mobileProgress = Math.max(0, Math.min(1, (globalViewConf.breakpoint - state.size.width) / (globalViewConf.breakpoint - MODEL_CONFIG.mobileConfig.scale.minBreakpoint)))
-        
+
         targetOffsetX = (pConf.maxOffsetX || 0) * mobileProgress * state.size.width
         targetOffsetY = (pConf.maxOffsetY || 0) * mobileProgress * state.size.height
       }
 
-      // Smoothly damp the 2D offset to prevent snapping between screens
-      const currentOffsetX = dampRot(state.camera.userData.offsetX ?? targetOffsetX, targetOffsetX, 3, safeDelta)
-      const currentOffsetY = dampRot(state.camera.userData.offsetY ?? targetOffsetY, targetOffsetY, 3, safeDelta)
-      
+      // -------------------------------------------------------------
+      // Screen Transition (Ease-In-Out vs Damping)
+      // -------------------------------------------------------------
+      const trans = screenTransitionRef.current
+
+      // If screen changed, initialize a new transition from EXACTLY where we are right now
+      if (activeScreen !== trans.lastScreen) {
+        // Use the cinematic time-based easeInOut ONLY for the 360-spin
+        if ((trans.lastScreen === 1 && activeScreen === 2) || (trans.lastScreen === 2 && activeScreen === 1)) {
+          trans.isTransitioning = true
+          trans.duration = 2.2
+          trans.startTime = state.clock.elapsedTime
+          
+          trans.startRot = {
+            x: groupRef.current.userData.baseRotX ?? activeBaseRot.x,
+            y: groupRef.current.userData.baseRotY ?? activeBaseRot.y,
+            z: groupRef.current.userData.baseRotZ ?? activeBaseRot.z
+          }
+          trans.startPos = [
+            groupRef.current.userData.posX ?? activePosition[0],
+            groupRef.current.userData.posY ?? activePosition[1],
+            groupRef.current.userData.posZ ?? activePosition[2]
+          ]
+          trans.startOffset = {
+            x: state.camera.userData.offsetX ?? targetOffsetX,
+            y: state.camera.userData.offsetY ?? targetOffsetY
+          }
+        } else {
+          // Standard transitions rely on exponential damping instead
+          trans.isTransitioning = false
+        }
+        
+        trans.lastScreen = activeScreen
+      }
+
+      let currentBaseRotX = activeBaseRot.x
+      let currentBaseRotY = activeBaseRot.y
+      let currentBaseRotZ = activeBaseRot.z
+      let currentPosX = activePosition[0]
+      let currentPosY = activePosition[1]
+      let currentPosZ = activePosition[2]
+      let currentOffsetX = targetOffsetX
+      let currentOffsetY = targetOffsetY
+
+      if (trans.isTransitioning) {
+        const elapsed = state.clock.elapsedTime - trans.startTime
+        const rawProgress = elapsed / trans.duration
+        
+        if (rawProgress >= 1) {
+          trans.isTransitioning = false
+        } else {
+          // Time-based cinematic easeInOutCubic transition
+          const ease = easeInOutCubic(rawProgress)
+          
+          currentBaseRotX = lerp(trans.startRot.x, activeBaseRot.x, ease)
+          currentBaseRotY = lerp(trans.startRot.y, activeBaseRot.y, ease)
+          currentBaseRotZ = lerp(trans.startRot.z, activeBaseRot.z, ease)
+
+          currentPosX = lerp(trans.startPos[0], activePosition[0], ease)
+          currentPosY = lerp(trans.startPos[1], activePosition[1], ease)
+          currentPosZ = lerp(trans.startPos[2], activePosition[2], ease)
+
+          currentOffsetX = lerp(trans.startOffset.x, targetOffsetX, ease)
+          currentOffsetY = lerp(trans.startOffset.y, targetOffsetY, ease)
+        }
+      } else {
+        // Fallback to the original snappy exponential damping (ease-out)
+        const dampRot = THREE.MathUtils.damp
+        currentBaseRotX = dampRot(groupRef.current.userData.baseRotX ?? activeBaseRot.x, activeBaseRot.x, 3, safeDelta)
+        currentBaseRotY = dampRot(groupRef.current.userData.baseRotY ?? activeBaseRot.y, activeBaseRot.y, 3, safeDelta)
+        currentBaseRotZ = dampRot(groupRef.current.userData.baseRotZ ?? activeBaseRot.z, activeBaseRot.z, 3, safeDelta)
+
+        currentPosX = dampRot(groupRef.current.userData.posX ?? activePosition[0], activePosition[0], 3, safeDelta)
+        currentPosY = dampRot(groupRef.current.userData.posY ?? activePosition[1], activePosition[1], 3, safeDelta)
+        currentPosZ = dampRot(groupRef.current.userData.posZ ?? activePosition[2], activePosition[2], 3, safeDelta)
+
+        currentOffsetX = dampRot(state.camera.userData.offsetX ?? targetOffsetX, targetOffsetX, 3, safeDelta)
+        currentOffsetY = dampRot(state.camera.userData.offsetY ?? targetOffsetY, targetOffsetY, 3, safeDelta)
+      }
+
+      // Save state for interruptions
+      groupRef.current.userData.baseRotX = currentBaseRotX
+      groupRef.current.userData.baseRotY = currentBaseRotY
+      groupRef.current.userData.baseRotZ = currentBaseRotZ
+      groupRef.current.userData.posX = currentPosX
+      groupRef.current.userData.posY = currentPosY
+      groupRef.current.userData.posZ = currentPosZ
       state.camera.userData.offsetX = currentOffsetX
       state.camera.userData.offsetY = currentOffsetY
 
+      // Apply transformations
+      groupRef.current.rotation.x = currentBaseRotX + rotation.current.x
+      groupRef.current.rotation.y = currentBaseRotY + rotation.current.y + intro.yOffset
+      groupRef.current.rotation.z = currentBaseRotZ + intro.zOffset
+
+      groupRef.current.position.set(currentPosX, currentPosY, currentPosZ)
+
       if (Math.abs(currentOffsetX) > 0.5 || Math.abs(currentOffsetY) > 0.5) {
-        // Shift the rendering frustum (this avoids physically moving the 3D object away from lights/HDRI)
         state.camera.setViewOffset(state.size.width, state.size.height, currentOffsetX, currentOffsetY, state.size.width, state.size.height)
       } else {
         if (state.camera.view) state.camera.clearViewOffset()
@@ -419,13 +494,13 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       // -------------------------------------------------------------
       const aspectCompensation = window.innerHeight / state.size.height
       let mobileReduction = 1.0
-      
-      const sConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation 
+
+      const sConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation
         ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.scale || MODEL_CONFIG.mobileConfig.scale)
         : MODEL_CONFIG.mobileConfig.scale
-      
+
       const globalSConf = MODEL_CONFIG.mobileConfig.scale
-      
+
       if (state.size.width < globalSConf.phase1Start && state.size.width >= globalSConf.phase2Start) {
         const progress = (state.size.width - globalSConf.phase2Start) / (globalSConf.phase1Start - globalSConf.phase2Start)
         mobileReduction = sConf.phase1Target + ((1.0 - sConf.phase1Target) * progress)
@@ -435,11 +510,12 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       }
 
       const targetResponsiveScale = aspectCompensation * mobileReduction
-      
+
       // Smoothly damp the responsive scale
+      const dampRot = THREE.MathUtils.damp
       const currentRespScale = dampRot(groupRef.current.userData.respScale ?? targetResponsiveScale, targetResponsiveScale, 3, safeDelta)
       groupRef.current.userData.respScale = currentRespScale
-      
+
       // Combine damped responsive scale with the intro animation scale
       groupRef.current.scale.setScalar(currentRespScale * intro.scale)
     }
