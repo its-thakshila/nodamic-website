@@ -98,7 +98,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                   //   50%    = half of this element's own height (so top edge = center - H/2)
                   //   -40svh = container offset correction (~header 10svh + safe gap + half container)
                   // Net effect: text top never rises above ~12svh from screen top, regardless of screen height.
-                  transform: 'translateY(max(calc(50% - 40svh), calc(-1 * max(0px, (1024px - 100vw) * 0.5))))'
+                  transform: 'translateY(max(calc(50% - 38svh), calc(-1 * max(0px, (1024px - 100vw) * 0.5))))'
                 } : {}}
               >
                 {/* TITLE & DESKTOP CTA */}
