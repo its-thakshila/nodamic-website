@@ -70,7 +70,7 @@ export const MODEL_CONFIG = {
       },
       mobileConfig: {
         scale: { phase1Target: 0.90, minScale: 0.7 },
-        viewOffset: { maxOffsetX: 0.8, maxOffsetY: -0.15 } // custom 2D Viewport shift (32% left)
+        viewOffset: { maxOffsetX: 0.65, maxOffsetY: -0.15 } // custom 2D Viewport shift (32% left)
       }
     },
     {

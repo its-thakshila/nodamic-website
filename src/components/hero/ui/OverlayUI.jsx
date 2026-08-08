@@ -78,7 +78,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
           {isLoaded && (
             <motion.div
               key={animationKey}
-              className={`flex-1 flex flex-col w-full lg:contents ${screenContent.layoutVariant === 'stacked-left' ? 'justify-start' : 'justify-between'
+              className={`flex-1 flex flex-col w-full lg:contents ${screenContent.layoutVariant === 'stacked-left' ? 'justify-center' : 'justify-between'
                 }`}
               initial="hidden"
               animate="visible"
@@ -91,8 +91,15 @@ export default memo(function OverlayUI({ isLoaded = false }) {
 
               {/* Text Group (Maintains a tight, near-constant gap between typography elements on mobile) */}
               <div
-                className={`flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0 ${screenContent.layoutVariant === 'stacked-left' ? 'mt-[6vh] lg:mt-0' : ''
-                  }`}
+                className="flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0"
+                style={screenContent.layoutVariant === 'stacked-left' ? {
+                  // Smoothly shift text upward below 1024px. At exactly 1024px translateY is 0.
+                  // Cap is expressed as calc(50% - 38svh):
+                  //   50%    = half of this element's own height (so top edge = center - H/2)
+                  //   -40svh = container offset correction (~header 10svh + safe gap + half container)
+                  // Net effect: text top never rises above ~12svh from screen top, regardless of screen height.
+                  transform: 'translateY(max(calc(50% - 40svh), calc(-1 * max(0px, (1024px - 100vw) * 0.5))))'
+                } : {}}
               >
                 {/* TITLE & DESKTOP CTA */}
                 <motion.div
@@ -109,7 +116,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                   <motion.h1
                     custom={0}
                     variants={fadeUp}
-                    className="font-outfit text-[clamp(2.5rem,18.5vw,4.5rem)] md:text-[clamp(4.5rem,9.0vw,8.6rem)] font-[400] leading-[0.88] text-white relative z-10 lg:whitespace-nowrap -ml-[0.04em]"
+                    className="font-outfit text-[min(clamp(2.5rem,18.5vw,4.5rem),8svh)] md:text-[clamp(4.5rem,9.0vw,8.6rem)] font-[400] leading-[0.88] text-white relative z-10 lg:whitespace-nowrap -ml-[0.04em]"
                     style={{ letterSpacing: '-0.035em' }}
                   >
                     {screenContent.headingTitle}<br />
@@ -145,7 +152,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                   }}
                 >
                   <p
-                    className={`font-outfit text-[clamp(1rem,5.6vw,1.35rem)] sm:text-[1.45rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 lg:whitespace-nowrap ${screenContent.layoutVariant === 'stacked-left' ? 'text-left' : 'text-left lg:text-right'
+                    className={`font-outfit text-[min(clamp(1rem,5.6vw,1.35rem),2.5svh)] sm:text-[1.45rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 lg:whitespace-nowrap ${screenContent.layoutVariant === 'stacked-left' ? 'text-left' : 'text-left lg:text-right'
                       }`}
                     style={{ letterSpacing: '0.001em' }}
                   >
