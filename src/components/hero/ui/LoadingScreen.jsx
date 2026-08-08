@@ -9,7 +9,7 @@ const LOADING_MESSAGES = [
   'Almost there.',
 ]
 
-const MESSAGE_INTERVAL_MS = 1000  // how long each message stays
+const MESSAGE_INTERVAL_MS = 2000  // how long each message stays
 const MESSAGE_FADE_MS = 400       // cross-fade duration between messages
 
 export default memo(function LoadingScreen({ onReady, isModelRendered }) {
