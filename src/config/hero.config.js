@@ -58,7 +58,7 @@ export const MODEL_CONFIG = {
     },
     {
       // Screen 1: Intermediate
-      position: [1.8, -0.2, -0.5],
+      position: [1.8, -0.25, -0.5],
       baseRotation: {
         x: 1.2,
         y: -0.38,
@@ -67,7 +67,7 @@ export const MODEL_CONFIG = {
     },
     {
       // Screen 2: Final Scrolled Down
-      position: [0.2, -0.15, 0],
+      position: [0.2, -0.2, -0.8],
       baseRotation: {
         x: 1.2,
         y: -0.38,
@@ -244,26 +244,29 @@ export const POST_PROCESSING_CONFIG = {
 export const UI_CONTENT = {
   screens: [
     {
+      layoutVariant: 'split',
       headingTitle: 'Unthink the',
       headingSubtitle: 'Ordinary.',
       ctaButtonText: 'SCROLL TO DISCOVER',
       bodyParagraph: {
-        desktop: 'Creating intelligent, minimalist\ntechnology products that redefine\neveryday experiences.',
-        tablet: 'Creating intelligent, minimalist technology products\nthat redefine everyday experiences.',
-        mobile: 'Creating intelligent, minimalist technology products that redefine everyday experiences.',
+        desktop: 'We build intelligent extensions\nof human potential.',
+        tablet: 'We build intelligent extensions of human\npotential.',
+        mobile: 'We build intelligent extensions of human potential.',
       }
     },
     {
-      headingTitle: 'THERMAL',
-      headingSubtitle: 'DYNAMICS',
-      ctaButtonText: 'EXPLORE ARCHITECTURE',
+      layoutVariant: 'stacked-left',
+      headingTitle: 'We build things.',
+      headingSubtitle: '',
+      ctaButtonText: '',
       bodyParagraph: {
-        desktop: 'Engineered for optimal heat dissipation.\nAn internal architecture that breathes,\nkeeping components ice cold under load.',
-        tablet: 'Engineered for optimal heat dissipation.\nAn internal architecture that breathes.',
-        mobile: 'Engineered for optimal heat dissipation. An internal architecture that breathes, keeping components ice cold under load.',
+        desktop: 'From the first sketch to the final circuit, we turn ideas\ninto physical experiences through hardware,\nsoftware, and everything in between.',
+        tablet: 'From the first sketch to the final circuit, we turn ideas\ninto physical experiences through hardware.',
+        mobile: 'From the first sketch to the final circuit, we turn ideas into physical experiences through hardware, software, and everything in between.',
       }
     },
     {
+      layoutVariant: 'split',
       headingTitle: 'AEROSPACE',
       headingSubtitle: 'GRADE',
       ctaButtonText: 'VIEW SPECIFICATIONS',

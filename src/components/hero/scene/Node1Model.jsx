@@ -118,14 +118,23 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     const aspectCompensation = window.innerHeight / size.height
 
     // 2. Fluid continuous reduction based strictly on width interpolation
-    const MIN_SCALE = 0.70 // <-- Adjust this value to make the mobile model smaller or larger!
-    const MAX_SCALE = 1.00
+    let mobileReduction = 1.0
+    
+    if (size.width < 1520 && size.width >= 1024) {
+      // Phase 1: Slow reduction from 1.0 (at 1520px) down to 0.90 (at 1024px)
+      const progress = (size.width - 1024) / (1520 - 1024) // 0 to 1
+      mobileReduction = 0.90 + (0.10 * progress)
+    } else if (size.width < 1024) {
+      // Phase 2: From 1024px down to 430px, reduce at the exact same rate as before
+      // (Originally dropped 0.30 between 1024 and 430. So from 0.90 it drops to 0.60)
+      const MIN_SCALE = 0.60 
+      const MAX_SCALE = 0.90
+      const progress = Math.max(0, Math.min(1, (size.width - 430) / (1024 - 430)))
+      mobileReduction = MIN_SCALE + ((MAX_SCALE - MIN_SCALE) * progress)
+    }
 
-    const progress = Math.max(0, Math.min(1, (size.width - 430) / (1024 - 430)))
-    const mobileReduction = MIN_SCALE + ((MAX_SCALE - MIN_SCALE) * progress)
-
-    // Above 1024px, aspectCompensation is ~1.0 and mobileReduction is 1.0. 
-    // Below 1024px, the model scales smoothly without ANY sudden breakpoint jumps.
+    // Above 1520px, mobileReduction is 1.0. 
+    // Below 1520px, the model scales smoothly without ANY sudden breakpoint jumps.
     return baseSize * aspectCompensation * mobileReduction
   }, [size.width, size.height])
 
