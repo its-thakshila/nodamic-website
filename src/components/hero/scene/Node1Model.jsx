@@ -107,55 +107,23 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   })
   const INTRO_DELAY = ANIMATION_TIMING.introDelay  // seconds before the settle animation begins
 
-  // Fluid responsive scaling with mathematically perfect FOV snap compensation
-  const activeTargetSize = useMemo(() => {
-    const baseSize = MODEL_CONFIG.targetSize
-
-    // 1. Perfect CSS Height Snap Compensation
-    // When the CSS canvas wrapper drops from 100vh to 55vh at 1024px, the camera's fixed vertical FOV 
-    // causes the product to instantly shrink by 45%. We completely neutralize this visual jump by 
-    // scaling the 3D model inversely to the canvas height ratio.
-    const aspectCompensation = window.innerHeight / size.height
-
-    // 2. Fluid continuous reduction based strictly on width interpolation
-    let mobileReduction = 1.0
-    
-    if (size.width < 1520 && size.width >= 1024) {
-      // Phase 1: Slow reduction from 1.0 (at 1520px) down to 0.90 (at 1024px)
-      const progress = (size.width - 1024) / (1520 - 1024) // 0 to 1
-      mobileReduction = 0.90 + (0.10 * progress)
-    } else if (size.width < 1024) {
-      // Phase 2: From 1024px down to 430px, reduce at the exact same rate as before
-      // (Originally dropped 0.30 between 1024 and 430. So from 0.90 it drops to 0.60)
-      const MIN_SCALE = 0.60 
-      const MAX_SCALE = 0.90
-      const progress = Math.max(0, Math.min(1, (size.width - 430) / (1024 - 430)))
-      mobileReduction = MIN_SCALE + ((MAX_SCALE - MIN_SCALE) * progress)
-    }
-
-    // Above 1520px, mobileReduction is 1.0. 
-    // Below 1520px, the model scales smoothly without ANY sudden breakpoint jumps.
-    return baseSize * aspectCompensation * mobileReduction
-  }, [size.width, size.height])
-
   // Fluid responsive positioning: smoothly moves the model left and up on mobile
   const activePosition = useMemo(() => {
     // Determine the base position based on current active screen
     const screenConfig = MODEL_CONFIG.screens ? MODEL_CONFIG.screens[activeScreen] : MODEL_CONFIG
     const basePos = screenConfig.position
+    
+    const pConf = screenConfig.mobileConfig?.position || { maxXOffset: -0.1, maxYOffset: 0.25 }
+    const globalPConf = MODEL_CONFIG.mobileConfig.position
 
-    if (size.width >= 1024) return basePos
+    if (size.width >= globalPConf.breakpoint) return basePos
 
-    // mobileProgress is 0.0 at 1024px, and 1.0 at 430px
-    const mobileProgress = Math.max(0, Math.min(1, (1024 - size.width) / (1024 - 430)))
-
-    // Maximum offsets applied at the smallest mobile size
-    const MAX_X_OFFSET = -0.1 // <-- Adjust this negative to move further left
-    const MAX_Y_OFFSET = 0.25  // <-- Adjust this positive to move further up
+    // mobileProgress is 0.0 at breakpoint, and 1.0 at minBreakpoint
+    const mobileProgress = Math.max(0, Math.min(1, (globalPConf.breakpoint - size.width) / (globalPConf.breakpoint - MODEL_CONFIG.mobileConfig.scale.minBreakpoint)))
 
     return [
-      basePos[0] + (MAX_X_OFFSET * mobileProgress),
-      basePos[1] + (MAX_Y_OFFSET * mobileProgress),
+      basePos[0] + (pConf.maxXOffset * mobileProgress),
+      basePos[1] + (pConf.maxYOffset * mobileProgress),
       basePos[2]
     ]
   }, [size.width, activeScreen])
@@ -168,8 +136,10 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     box.getSize(sz)
     box.getCenter(center)
     const maxAxis = Math.max(sz.x, sz.y, sz.z)
-    return { normScale: activeTargetSize / maxAxis, centerOffset: center }
-  }, [originalScene, activeTargetSize])
+    
+    // Only perform static normalization here. Responsive scaling is handled smoothly in useFrame.
+    return { normScale: MODEL_CONFIG.targetSize / maxAxis, centerOffset: center }
+  }, [originalScene])
 
   /* ── Apply normalization + luxury product photography materials ── */
   useEffect(() => {
@@ -423,9 +393,34 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       groupRef.current.userData.posZ = currentPosZ
 
       groupRef.current.position.set(currentPosX, currentPosY, currentPosZ)
+
+      // Responsive scale calculation based on active screen
+      const aspectCompensation = window.innerHeight / state.size.height
+      let mobileReduction = 1.0
+      
+      const sConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation 
+        ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.scale || MODEL_CONFIG.mobileConfig.scale)
+        : MODEL_CONFIG.mobileConfig.scale
+      
+      const globalSConf = MODEL_CONFIG.mobileConfig.scale
+      
+      if (state.size.width < globalSConf.phase1Start && state.size.width >= globalSConf.phase2Start) {
+        const progress = (state.size.width - globalSConf.phase2Start) / (globalSConf.phase1Start - globalSConf.phase2Start)
+        mobileReduction = sConf.phase1Target + ((1.0 - sConf.phase1Target) * progress)
+      } else if (state.size.width < globalSConf.phase2Start) {
+        const progress = Math.max(0, Math.min(1, (state.size.width - globalSConf.minBreakpoint) / (globalSConf.phase2Start - globalSConf.minBreakpoint)))
+        mobileReduction = sConf.minScale + ((sConf.phase1Target - sConf.minScale) * progress)
+      }
+
+      const targetResponsiveScale = aspectCompensation * mobileReduction
+      
+      // Smoothly damp the responsive scale
+      const currentRespScale = dampRot(groupRef.current.userData.respScale ?? targetResponsiveScale, targetResponsiveScale, 3, safeDelta)
+      groupRef.current.userData.respScale = currentRespScale
+      
+      // Combine damped responsive scale with the intro animation scale
+      groupRef.current.scale.setScalar(currentRespScale * intro.scale)
     }
-    
-    groupRef.current.scale.setScalar(intro.scale)
 
     // 2. High-performance switch translation & LED behavior damping (~200ms mechanical feel)
     const targetZ = isOn ? 0 : 0.389

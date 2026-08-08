@@ -54,6 +54,10 @@ export const MODEL_CONFIG = {
         x: 1.2,
         y: 0.38,
         z: -0.4,
+      },
+      mobileConfig: {
+        scale: { phase1Target: 0.90, minScale: 0.60 },
+        position: { maxXOffset: -0.1, maxYOffset: 0.25 }
       }
     },
     {
@@ -63,6 +67,10 @@ export const MODEL_CONFIG = {
         x: 1.2,
         y: -0.38,
         z: 0.6,
+      },
+      mobileConfig: {
+        scale: { phase1Target: 0.90, minScale: 0.65 },
+        position: { maxXOffset: -1.2, maxYOffset: -0.75 } // custom left offset for split layout
       }
     },
     {
@@ -72,9 +80,24 @@ export const MODEL_CONFIG = {
         x: 1.2,
         y: -0.38,
         z: 0.4,
+      },
+      mobileConfig: {
+        scale: { phase1Target: 0.90, minScale: 0.60 },
+        position: { maxXOffset: -0.1, maxYOffset: 0.25 }
       }
     }
   ],
+  mobileConfig: {
+    // Global defaults (used for breakpoints)
+    scale: {
+      phase1Start: 1520,
+      phase2Start: 1024,
+      minBreakpoint: 430,
+    },
+    position: {
+      breakpoint: 1024,
+    }
+  },
   mouseSensitivity: {
     x: 0.07,
     y: 0.06,

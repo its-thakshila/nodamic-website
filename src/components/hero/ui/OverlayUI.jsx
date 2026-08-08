@@ -73,29 +73,33 @@ export default memo(function OverlayUI({ isLoaded = false }) {
       </div>
 
       {/* Row 3: Bottom layout / Mobile Hero Composition */}
-      <div className="flex-1 flex flex-col justify-between lg:justify-end lg:gap-0 lg:col-span-12 lg:row-start-3 lg:grid lg:grid-cols-12 lg:items-end lg:gap-x-[clamp(2rem,3.1vw,3rem)] lg:pb-[clamp(3.3rem,5.2vw,5rem)] relative z-40 w-full">
-        
-        {/* Product Placeholder for Mobile Flexbox Composition (absorbs extra vertical space) */}
-        <div className="w-full flex-[1.5] min-h-[30svh] lg:hidden" />
+      <div className="flex-1 flex flex-col lg:justify-end lg:gap-0 lg:col-span-12 lg:row-start-3 lg:grid lg:grid-cols-12 lg:items-end lg:gap-x-[clamp(2rem,3.1vw,3rem)] lg:pb-[clamp(3.3rem,5.2vw,5rem)] relative z-40 w-full">
+        <AnimatePresence mode="wait">
+          {isLoaded && (
+            <motion.div
+              key={animationKey}
+              className={`flex-1 flex flex-col w-full lg:contents ${screenContent.layoutVariant === 'stacked-left' ? 'justify-start' : 'justify-between'
+                }`}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {/* Product Placeholder for Mobile Flexbox Composition (absorbs extra vertical space) */}
+              {screenContent.layoutVariant !== 'stacked-left' && (
+                <div className="w-full flex-[1.5] min-h-[30svh] shrink-0 lg:hidden" />
+              )}
 
-        {/* Text Group (Maintains a tight, near-constant gap between typography elements on mobile) */}
-        <div className="flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0">
-          <AnimatePresence mode="wait">
-            {isLoaded && (
-              <motion.div
-                key={animationKey}
-                className="flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0"
-                initial="hidden"
-                animate="visible"
-                exit="exit"
+              {/* Text Group (Maintains a tight, near-constant gap between typography elements on mobile) */}
+              <div
+                className={`flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0 ${screenContent.layoutVariant === 'stacked-left' ? 'mt-[8vh] lg:mt-0' : ''
+                  }`}
               >
                 {/* TITLE & DESKTOP CTA */}
                 <motion.div
-                  className={`lg:col-span-7 relative w-full ${
-                    screenContent.layoutVariant === 'stacked-left'
-                      ? 'self-start lg:self-end lg:-translate-y-[22svh]'
-                      : 'self-start lg:self-end'
-                  }`}
+                  className={`lg:col-span-7 relative w-full ${screenContent.layoutVariant === 'stacked-left'
+                    ? 'self-start lg:self-end lg:-translate-y-[22svh]'
+                    : 'self-start lg:self-end'
+                    }`}
                   variants={{
                     hidden: {},
                     visible: { transition: { staggerChildren: 0.1 } },
@@ -130,11 +134,10 @@ export default memo(function OverlayUI({ isLoaded = false }) {
 
                 {/* BODY PARAGRAPH */}
                 <motion.div
-                  className={`flex flex-col w-full lg:mb-2 ${
-                    screenContent.layoutVariant === 'stacked-left'
-                      ? 'lg:col-span-7 self-start lg:self-start items-start justify-start lg:mt-[3.5vh] lg:-translate-y-[22svh] lg:justify-self-start' 
-                      : 'lg:col-span-5 lg:col-start-8 self-start lg:self-end items-start lg:items-end justify-end lg:justify-self-end'
-                  }`}
+                  className={`flex flex-col w-full lg:mb-2 ${screenContent.layoutVariant === 'stacked-left'
+                    ? 'lg:col-span-7 self-start lg:self-start items-start justify-start lg:mt-[3.5vh] lg:-translate-y-[22svh] lg:justify-self-start'
+                    : 'lg:col-span-5 lg:col-start-8 self-start lg:self-end items-start lg:items-end justify-end lg:justify-self-end'
+                    }`}
                   variants={{
                     hidden: { opacity: 0 },
                     visible: { opacity: 1, transition: { duration: ANIMATION_TIMING.duration, ease: 'easeOut', delay: ANIMATION_TIMING.textDelay } },
@@ -142,9 +145,8 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                   }}
                 >
                   <p
-                    className={`font-outfit text-[clamp(1rem,5.6vw,1.35rem)] sm:text-[1.45rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 lg:whitespace-nowrap ${
-                      screenContent.layoutVariant === 'stacked-left' ? 'text-left' : 'text-left lg:text-right'
-                    }`}
+                    className={`font-outfit text-[clamp(1rem,5.6vw,1.35rem)] sm:text-[1.45rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 lg:whitespace-nowrap ${screenContent.layoutVariant === 'stacked-left' ? 'text-left' : 'text-left lg:text-right'
+                      }`}
                     style={{ letterSpacing: '0.001em' }}
                   >
                     <span className="hidden lg:inline">
@@ -188,10 +190,10 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                     </button>
                   </motion.div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
