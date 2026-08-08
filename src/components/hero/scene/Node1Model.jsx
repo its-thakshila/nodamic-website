@@ -107,26 +107,14 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   })
   const INTRO_DELAY = ANIMATION_TIMING.introDelay  // seconds before the settle animation begins
 
-  // Fluid responsive positioning: smoothly moves the model left and up on mobile
+  // For mobile, we no longer shift the 3D position to avoid breaking reflections/lighting.
+  // Instead, 3D position remains locked to the screen's base configuration, and 
+  // we apply a 2D viewport offset to the camera in useFrame.
   const activePosition = useMemo(() => {
     // Determine the base position based on current active screen
     const screenConfig = MODEL_CONFIG.screens ? MODEL_CONFIG.screens[activeScreen] : MODEL_CONFIG
-    const basePos = screenConfig.position
-    
-    const pConf = screenConfig.mobileConfig?.position || { maxXOffset: -0.1, maxYOffset: 0.25 }
-    const globalPConf = MODEL_CONFIG.mobileConfig.position
-
-    if (size.width >= globalPConf.breakpoint) return basePos
-
-    // mobileProgress is 0.0 at breakpoint, and 1.0 at minBreakpoint
-    const mobileProgress = Math.max(0, Math.min(1, (globalPConf.breakpoint - size.width) / (globalPConf.breakpoint - MODEL_CONFIG.mobileConfig.scale.minBreakpoint)))
-
-    return [
-      basePos[0] + (pConf.maxXOffset * mobileProgress),
-      basePos[1] + (pConf.maxYOffset * mobileProgress),
-      basePos[2]
-    ]
-  }, [size.width, activeScreen])
+    return screenConfig.position
+  }, [activeScreen])
 
   // Compute bounding box from original unmodified scene
   const { normScale, centerOffset } = useMemo(() => {
@@ -394,7 +382,41 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
       groupRef.current.position.set(currentPosX, currentPosY, currentPosZ)
 
+      // -------------------------------------------------------------
+      // 2D Viewport Shifting for Mobile
+      // -------------------------------------------------------------
+      const globalViewConf = MODEL_CONFIG.mobileConfig.viewOffset
+      let targetOffsetX = 0
+      let targetOffsetY = 0
+      
+      if (state.size.width < globalViewConf.breakpoint) {
+        const pConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation 
+          ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.viewOffset || globalViewConf)
+          : globalViewConf
+
+        const mobileProgress = Math.max(0, Math.min(1, (globalViewConf.breakpoint - state.size.width) / (globalViewConf.breakpoint - MODEL_CONFIG.mobileConfig.scale.minBreakpoint)))
+        
+        targetOffsetX = (pConf.maxOffsetX || 0) * mobileProgress * state.size.width
+        targetOffsetY = (pConf.maxOffsetY || 0) * mobileProgress * state.size.height
+      }
+
+      // Smoothly damp the 2D offset to prevent snapping between screens
+      const currentOffsetX = dampRot(state.camera.userData.offsetX ?? targetOffsetX, targetOffsetX, 3, safeDelta)
+      const currentOffsetY = dampRot(state.camera.userData.offsetY ?? targetOffsetY, targetOffsetY, 3, safeDelta)
+      
+      state.camera.userData.offsetX = currentOffsetX
+      state.camera.userData.offsetY = currentOffsetY
+
+      if (Math.abs(currentOffsetX) > 0.5 || Math.abs(currentOffsetY) > 0.5) {
+        // Shift the rendering frustum (this avoids physically moving the 3D object away from lights/HDRI)
+        state.camera.setViewOffset(state.size.width, state.size.height, currentOffsetX, currentOffsetY, state.size.width, state.size.height)
+      } else {
+        if (state.camera.view) state.camera.clearViewOffset()
+      }
+
+      // -------------------------------------------------------------
       // Responsive scale calculation based on active screen
+      // -------------------------------------------------------------
       const aspectCompensation = window.innerHeight / state.size.height
       let mobileReduction = 1.0
       

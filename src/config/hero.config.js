@@ -56,8 +56,8 @@ export const MODEL_CONFIG = {
         z: -0.4,
       },
       mobileConfig: {
-        scale: { phase1Target: 0.90, minScale: 0.60 },
-        position: { maxXOffset: -0.1, maxYOffset: 0.25 }
+        scale: { phase1Target: 0.90, minScale: 0.70 },
+        viewOffset: { maxOffsetX: 0.05, maxOffsetY: 0.05 }
       }
     },
     {
@@ -69,8 +69,8 @@ export const MODEL_CONFIG = {
         z: 0.6,
       },
       mobileConfig: {
-        scale: { phase1Target: 0.90, minScale: 0.65 },
-        position: { maxXOffset: -1.2, maxYOffset: -0.75 } // custom left offset for split layout
+        scale: { phase1Target: 0.90, minScale: 0.7 },
+        viewOffset: { maxOffsetX: 0.8, maxOffsetY: -0.15 } // custom 2D Viewport shift (32% left)
       }
     },
     {
@@ -83,7 +83,7 @@ export const MODEL_CONFIG = {
       },
       mobileConfig: {
         scale: { phase1Target: 0.90, minScale: 0.60 },
-        position: { maxXOffset: -0.1, maxYOffset: 0.25 }
+        viewOffset: { maxOffsetX: 0.05, maxOffsetY: -0.05 }
       }
     }
   ],
@@ -94,7 +94,7 @@ export const MODEL_CONFIG = {
       phase2Start: 1024,
       minBreakpoint: 430,
     },
-    position: {
+    viewOffset: {
       breakpoint: 1024,
     }
   },

@@ -91,7 +91,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
 
               {/* Text Group (Maintains a tight, near-constant gap between typography elements on mobile) */}
               <div
-                className={`flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0 ${screenContent.layoutVariant === 'stacked-left' ? 'mt-[8vh] lg:mt-0' : ''
+                className={`flex flex-col gap-[clamp(16px,2svh,24px)] lg:contents shrink-0 ${screenContent.layoutVariant === 'stacked-left' ? 'mt-[6vh] lg:mt-0' : ''
                   }`}
               >
                 {/* TITLE & DESKTOP CTA */}
