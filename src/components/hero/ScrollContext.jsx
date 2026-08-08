@@ -32,7 +32,7 @@ export function ScrollProvider({ children, totalScreens = 2 }) {
       if (next !== current) {
         // Lock scrolling for the exact duration of the transition animation
         if ((current === 1 && next === 2) || (current === 2 && next === 1)) {
-          currentDebounce = 2200 // Wait for the full 360 spin
+          currentDebounce = 2000 // Wait for the full 360 spin
         } else {
           currentDebounce = 1000 // Standard snappy transition lock
         }

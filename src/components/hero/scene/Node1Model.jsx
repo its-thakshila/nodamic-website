@@ -69,6 +69,70 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     }
   }, [isOn])
 
+  // Refs for custom drag-to-rotate interaction on Screen 2
+  const activeScreenRef = useRef(activeScreen)
+  useEffect(() => {
+    activeScreenRef.current = activeScreen
+  }, [activeScreen])
+
+  const dragStateRef = useRef({
+    isDragging: false,
+    startX: 0,
+    targetDragRot: 0,
+    currentDragRot: 0
+  })
+
+  useEffect(() => {
+    const handlePointerDown = (e) => {
+      if (activeScreenRef.current !== 2) return
+      dragStateRef.current.isDragging = true
+      dragStateRef.current.startX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0)
+    }
+
+    const handlePointerMove = (e) => {
+      if (!dragStateRef.current.isDragging || activeScreenRef.current !== 2) return
+      const currentX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0)
+      const deltaX = currentX - dragStateRef.current.startX
+      
+      // Map screen width to a full 360 degree rotation (Math.PI * 2)
+      // Dragging right rotates positive, dragging left rotates negative
+      dragStateRef.current.targetDragRot += (deltaX / window.innerWidth) * Math.PI * 2
+      dragStateRef.current.startX = currentX
+    }
+
+    const handlePointerUp = () => {
+      dragStateRef.current.isDragging = false
+      
+      // Calculate the nearest multiple of 2*PI to avoid unwinding multiple full rotations
+      const currentRot = dragStateRef.current.currentDragRot
+      const closestReset = Math.round(currentRot / (Math.PI * 2)) * (Math.PI * 2)
+      dragStateRef.current.targetDragRot = closestReset
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
+    
+    // Touch fallbacks
+    window.addEventListener('touchstart', handlePointerDown, { passive: true })
+    window.addEventListener('touchmove', handlePointerMove, { passive: true })
+    window.addEventListener('touchend', handlePointerUp)
+    window.addEventListener('touchcancel', handlePointerUp)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
+      window.removeEventListener('touchstart', handlePointerDown)
+      window.removeEventListener('touchmove', handlePointerMove)
+      window.removeEventListener('touchend', handlePointerUp)
+      window.removeEventListener('touchcancel', handlePointerUp)
+    }
+  }, [])
+
+  const outerGroupRef = useRef()
   const groupRef = useRef()
 
   const { scene: originalScene } = useGLTF(MODEL_CONFIG.path)
@@ -332,7 +396,11 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     // Desktop and landscape/tablet rely on absolute pointer position tracking.
     // On small portrait phone screens, we lock the rotation to zero so touch dragging doesn't move the model.
     const isSmallPortrait = size.width < 768 && size.height > size.width
-    const targetX = isSmallPortrait ? 0 : -pointer.y * MODEL_CONFIG.mouseSensitivity.y * sensitivityMultiplier
+    
+    // Increase vertical tilt range when actively dragging on Screen 2
+    const dragTiltMultiplier = (dragStateRef.current.isDragging && activeScreen === 2) ? 2.5 : 1.0
+    
+    const targetX = isSmallPortrait ? 0 : -pointer.y * MODEL_CONFIG.mouseSensitivity.y * sensitivityMultiplier * dragTiltMultiplier
     const targetY = isSmallPortrait ? 0 : pointer.x * MODEL_CONFIG.mouseSensitivity.x * sensitivityMultiplier
 
     rotation.current.x = lerp(rotation.current.x, targetX, MODEL_CONFIG.lerpFactor)
@@ -387,6 +455,28 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       }
 
       // -------------------------------------------------------------
+      // Calculate target Responsive Scale for Mobile
+      // -------------------------------------------------------------
+      const aspectCompensation = window.innerHeight / state.size.height
+      let mobileReduction = 1.0
+
+      const sConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation
+        ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.scale || MODEL_CONFIG.mobileConfig.scale)
+        : MODEL_CONFIG.mobileConfig.scale
+
+      const globalSConf = MODEL_CONFIG.mobileConfig.scale
+
+      if (state.size.width < globalSConf.phase1Start && state.size.width >= globalSConf.phase2Start) {
+        const progress = (state.size.width - globalSConf.phase2Start) / (globalSConf.phase1Start - globalSConf.phase2Start)
+        mobileReduction = sConf.phase1Target + ((1.0 - sConf.phase1Target) * progress)
+      } else if (state.size.width < globalSConf.phase2Start) {
+        const progress = Math.max(0, Math.min(1, (state.size.width - globalSConf.minBreakpoint) / (globalSConf.phase2Start - globalSConf.minBreakpoint)))
+        mobileReduction = sConf.minScale + ((sConf.phase1Target - sConf.minScale) * progress)
+      }
+
+      const targetResponsiveScale = aspectCompensation * mobileReduction
+
+      // -------------------------------------------------------------
       // Screen Transition (Ease-In-Out vs Damping)
       // -------------------------------------------------------------
       const trans = screenTransitionRef.current
@@ -396,7 +486,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
         // Use the cinematic time-based easeInOut ONLY for the 360-spin
         if ((trans.lastScreen === 1 && activeScreen === 2) || (trans.lastScreen === 2 && activeScreen === 1)) {
           trans.isTransitioning = true
-          trans.duration = 2.2
+          trans.duration = 2.0
           trans.startTime = state.clock.elapsedTime
           
           trans.startRot = {
@@ -413,6 +503,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
             x: state.camera.userData.offsetX ?? targetOffsetX,
             y: state.camera.userData.offsetY ?? targetOffsetY
           }
+          trans.startScale = groupRef.current.userData.respScale ?? targetResponsiveScale
         } else {
           // Standard transitions rely on exponential damping instead
           trans.isTransitioning = false
@@ -429,6 +520,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       let currentPosZ = activePosition[2]
       let currentOffsetX = targetOffsetX
       let currentOffsetY = targetOffsetY
+      let currentRespScale = targetResponsiveScale
 
       if (trans.isTransitioning) {
         const elapsed = state.clock.elapsedTime - trans.startTime
@@ -450,6 +542,8 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
           currentOffsetX = lerp(trans.startOffset.x, targetOffsetX, ease)
           currentOffsetY = lerp(trans.startOffset.y, targetOffsetY, ease)
+          
+          currentRespScale = lerp(trans.startScale, targetResponsiveScale, ease)
         }
       } else {
         // Fallback to the original snappy exponential damping (ease-out)
@@ -464,6 +558,8 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
         currentOffsetX = dampRot(state.camera.userData.offsetX ?? targetOffsetX, targetOffsetX, 3, safeDelta)
         currentOffsetY = dampRot(state.camera.userData.offsetY ?? targetOffsetY, targetOffsetY, 3, safeDelta)
+        
+        currentRespScale = dampRot(groupRef.current.userData.respScale ?? targetResponsiveScale, targetResponsiveScale, 3, safeDelta)
       }
 
       // Save state for interruptions
@@ -473,48 +569,40 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       groupRef.current.userData.posX = currentPosX
       groupRef.current.userData.posY = currentPosY
       groupRef.current.userData.posZ = currentPosZ
+      groupRef.current.userData.respScale = currentRespScale
       state.camera.userData.offsetX = currentOffsetX
       state.camera.userData.offsetY = currentOffsetY
 
-      // Apply transformations
+      // Custom Drag Rotation for Screen 2 (Applied to World coordinates via Outer Group)
+      if (activeScreen === 2) {
+        dragStateRef.current.currentDragRot = lerp(dragStateRef.current.currentDragRot, dragStateRef.current.targetDragRot, MODEL_CONFIG.lerpFactor * 1.5)
+      } else {
+        // Smoothly reset drag rotation when leaving Screen 2 to the closest 2*PI multiple
+        const closestReset = Math.round(dragStateRef.current.currentDragRot / (Math.PI * 2)) * (Math.PI * 2)
+        dragStateRef.current.targetDragRot = closestReset
+        dragStateRef.current.currentDragRot = lerp(dragStateRef.current.currentDragRot, closestReset, MODEL_CONFIG.lerpFactor * 1.5)
+      }
+
+      // Apply transformations to the main model (Local axes)
       groupRef.current.rotation.x = currentBaseRotX + rotation.current.x
       groupRef.current.rotation.y = currentBaseRotY + rotation.current.y + intro.yOffset
       groupRef.current.rotation.z = currentBaseRotZ + intro.zOffset
-
-      groupRef.current.position.set(currentPosX, currentPosY, currentPosZ)
+      
+      // Ensure groupRef remains centered within outerGroupRef
+      groupRef.current.position.set(0, 0, 0)
+      
+      // Apply the position and drag spin to the outer wrapper 
+      // This ensures it translates first, then spins in-place around the World Y-axis!
+      if (outerGroupRef.current) {
+        outerGroupRef.current.position.set(currentPosX, currentPosY, currentPosZ)
+        outerGroupRef.current.rotation.y = dragStateRef.current.currentDragRot
+      }
 
       if (Math.abs(currentOffsetX) > 0.5 || Math.abs(currentOffsetY) > 0.5) {
         state.camera.setViewOffset(state.size.width, state.size.height, currentOffsetX, currentOffsetY, state.size.width, state.size.height)
       } else {
         if (state.camera.view) state.camera.clearViewOffset()
       }
-
-      // -------------------------------------------------------------
-      // Responsive scale calculation based on active screen
-      // -------------------------------------------------------------
-      const aspectCompensation = window.innerHeight / state.size.height
-      let mobileReduction = 1.0
-
-      const sConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation
-        ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.scale || MODEL_CONFIG.mobileConfig.scale)
-        : MODEL_CONFIG.mobileConfig.scale
-
-      const globalSConf = MODEL_CONFIG.mobileConfig.scale
-
-      if (state.size.width < globalSConf.phase1Start && state.size.width >= globalSConf.phase2Start) {
-        const progress = (state.size.width - globalSConf.phase2Start) / (globalSConf.phase1Start - globalSConf.phase2Start)
-        mobileReduction = sConf.phase1Target + ((1.0 - sConf.phase1Target) * progress)
-      } else if (state.size.width < globalSConf.phase2Start) {
-        const progress = Math.max(0, Math.min(1, (state.size.width - globalSConf.minBreakpoint) / (globalSConf.phase2Start - globalSConf.minBreakpoint)))
-        mobileReduction = sConf.minScale + ((sConf.phase1Target - sConf.minScale) * progress)
-      }
-
-      const targetResponsiveScale = aspectCompensation * mobileReduction
-
-      // Smoothly damp the responsive scale
-      const dampRot = THREE.MathUtils.damp
-      const currentRespScale = dampRot(groupRef.current.userData.respScale ?? targetResponsiveScale, targetResponsiveScale, 3, safeDelta)
-      groupRef.current.userData.respScale = currentRespScale
 
       // Combine damped responsive scale with the intro animation scale
       groupRef.current.scale.setScalar(currentRespScale * intro.scale)
@@ -592,29 +680,31 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   }
 
   return (
-    <group ref={groupRef} dispose={null}>
-      {/* Declaratively apply the centering and normalization scale so it is strictly enforced on frame 1 */}
-      <group
-        scale={normScale}
-        position={[
-          -centerOffset.x * normScale,
-          -centerOffset.y * normScale,
-          -centerOffset.z * normScale
-        ]}
-      >
-        {diag && diag.useBoxGeometry ? (
-          <mesh scale={[10, 10, 10]}>
-            <boxGeometry />
-            <meshStandardMaterial color="#888888" />
-          </mesh>
-        ) : (
-          <primitive
-            object={scene}
-            onClick={handleClick}
-            onPointerMove={handlePointerMove}
-            onPointerOut={handlePointerOut}
-          />
-        )}
+    <group ref={outerGroupRef} dispose={null}>
+      <group ref={groupRef}>
+        {/* Declaratively apply the centering and normalization scale so it is strictly enforced on frame 1 */}
+        <group
+          scale={normScale}
+          position={[
+            -centerOffset.x * normScale,
+            -centerOffset.y * normScale,
+            -centerOffset.z * normScale
+          ]}
+        >
+          {diag && diag.useBoxGeometry ? (
+            <mesh scale={[10, 10, 10]}>
+              <boxGeometry />
+              <meshStandardMaterial color="#888888" />
+            </mesh>
+          ) : (
+            <primitive
+              object={scene}
+              onClick={handleClick}
+              onPointerMove={handlePointerMove}
+              onPointerOut={handlePointerOut}
+            />
+          )}
+        </group>
       </group>
     </group>
   )

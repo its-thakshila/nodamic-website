@@ -78,12 +78,12 @@ export const MODEL_CONFIG = {
       position: [0.2, -0.2, -0.8],
       baseRotation: {
         x: 1.2,
-        y: -0.38,
+        y: -0.25,
         z: 0.4 - (Math.PI * 2), // Full 360 rotation around Z axis
       },
       mobileConfig: {
         scale: { phase1Target: 0.90, minScale: 0.60 },
-        viewOffset: { maxOffsetX: 0.05, maxOffsetY: -0.05 }
+        viewOffset: { maxOffsetX: 0.05, maxOffsetY: 0.1 }
       }
     }
   ],
@@ -158,7 +158,7 @@ export const ENVIRONMENT_CONFIG = {
       rotation: {
         x: 0.17,
         y: 0.03,
-        z: 1.00,
+        z: 0.80,
       }
     }
   ]
@@ -197,7 +197,7 @@ export const STUDIO_LIGHTS = {
     screens: [
       { position: [0.5, 7.0, 0.5], intensity: 10 },
       { position: [-0.5, 7.0, 0.5], intensity: 20 },
-      { position: [-0.5, 7.0, 0.5], intensity: 15 }
+      { position: [-1, 7.0, 0.5], intensity: 20 }
     ]
   },
   // Hemisphere light starves underside of bounce while illuminating top facets
