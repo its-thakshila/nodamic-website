@@ -24,7 +24,7 @@ export const DEBUG_FLAGS = {
   enableSMAA: true,
   useHighResHDRI: false, // Toggles between 1k and 4k HDRI (fallback to 1k if 4k missing)
   useSplitGridLight: true, // Toggles between the 2x4 grid and a single large rect light
-  forceFixedDPR: true, // Disables AdaptiveDpr and locks Canvas DPR to 2.0
+  forceFixedDPR: false, // Disables AdaptiveDpr and locks Canvas DPR to 2.0
 }
 
 /* ─── Animation Timing ─────────────────────────────────────────────────────── */
@@ -57,7 +57,16 @@ export const MODEL_CONFIG = {
       }
     },
     {
-      // Screen 1: Scrolled Down
+      // Screen 1: Intermediate
+      position: [1.8, -0.2, -0.5],
+      baseRotation: {
+        x: 1.2,
+        y: -0.38,
+        z: 0.6,
+      }
+    },
+    {
+      // Screen 2: Final Scrolled Down
       position: [0.2, -0.15, 0],
       baseRotation: {
         x: 1.2,
@@ -114,7 +123,15 @@ export const ENVIRONMENT_CONFIG = {
       }
     },
     {
-      // Screen 1: Scrolled Down
+      // Screen 1: Intermediate
+      rotation: {
+        x: 0.07,
+        y: -0.07,
+        z: 0.95,
+      }
+    },
+    {
+      // Screen 2: Final Scrolled Down
       rotation: {
         x: 0.17,
         y: 0.03,
@@ -156,7 +173,8 @@ export const STUDIO_LIGHTS = {
     color: '#ffffff',
     screens: [
       { position: [0.5, 7.0, 0.5], intensity: 10 },
-      { position: [-0.5, 7.0, 0.5], intensity: 25 }
+      { position: [-0.5, 7.0, 0.5], intensity: 20 },
+      { position: [-0.5, 7.0, 0.5], intensity: 15 }
     ]
   },
   // Hemisphere light starves underside of bounce while illuminating top facets
@@ -233,6 +251,16 @@ export const UI_CONTENT = {
         desktop: 'Creating intelligent, minimalist\ntechnology products that redefine\neveryday experiences.',
         tablet: 'Creating intelligent, minimalist technology products\nthat redefine everyday experiences.',
         mobile: 'Creating intelligent, minimalist technology products that redefine everyday experiences.',
+      }
+    },
+    {
+      headingTitle: 'THERMAL',
+      headingSubtitle: 'DYNAMICS',
+      ctaButtonText: 'EXPLORE ARCHITECTURE',
+      bodyParagraph: {
+        desktop: 'Engineered for optimal heat dissipation.\nAn internal architecture that breathes,\nkeeping components ice cold under load.',
+        tablet: 'Engineered for optimal heat dissipation.\nAn internal architecture that breathes.',
+        mobile: 'Engineered for optimal heat dissipation. An internal architecture that breathes, keeping components ice cold under load.',
       }
     },
     {

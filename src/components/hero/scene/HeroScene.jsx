@@ -75,30 +75,36 @@ const getStaticDPR = () => {
     // Attempt to detect integrated graphics to clamp DPR for performance
     try {
       const canvas = document.createElement('canvas')
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      // MUST request high-performance to ensure we don't accidentally evaluate the motherboard's integrated graphics instead of the dedicated GPU!
+      const gl = canvas.getContext('webgl', { powerPreference: 'high-performance' }) || canvas.getContext('experimental-webgl', { powerPreference: 'high-performance' })
       if (gl) {
         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info')
         if (debugInfo) {
           const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase()
           // Flag common weak integrated GPUs (Intel HD/UHD/Iris, basic AMD Radeon Graphics APUs).
-          // Note: Apple M-series chips are integrated but highly capable, so they are excluded from this clamp.
+          // Exclude dedicated AMD cards that usually contain 'rx', 'pro', or 'xt'.
           const isIntegrated = renderer.includes('intel') || 
                                renderer.includes('uhd') || 
                                renderer.includes('iris') || 
-                               (renderer.includes('amd') && renderer.includes('radeon') && renderer.includes('graphics'))
+                               (renderer.includes('amd') && renderer.includes('radeon') && renderer.includes('graphics') && !renderer.match(/rx|pro|xt/))
           
           if (isIntegrated) {
-            console.log('[DPR Heuristic] Integrated GPU detected:', renderer, '-> Clamping DPR to 1.5')
-            return Math.min(dpr, 1.5)
+            console.log('[DPR Heuristic] Integrated GPU detected:', renderer, '-> Clamping DPR to 1.0')
+            return Math.min(dpr, 1.0)
+          } else {
+            console.log('[DPR Heuristic] Dedicated/High-end GPU detected:', renderer, '-> Boosting DPR to 2.0 for supersampling')
+            // For dedicated GPUs, we force a minimum of 2.0 DPR to guarantee Retina-quality supersampling 
+            // on standard 1080p/1440p desktop monitors (which usually have a native DPR of 1.0)
+            return Math.max(2.0, dpr)
           }
         }
       }
     } catch (e) {
-      // Fail silently and fallback to default desktop DPR
+      // Fail silently and fallback
     }
     
-    // Dedicated Desktop GPUs: 1.5 to 2.0 max
-    return Math.min(dpr, 2.0)
+    // Fallback if detection fails: guarantee at least 1.5 for desktops, up to 2.0
+    return Math.max(1.5, Math.min(dpr, 2.0))
   }
 
   if (isIOS) {
