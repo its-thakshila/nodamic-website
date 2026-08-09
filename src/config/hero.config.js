@@ -82,8 +82,8 @@ export const MODEL_CONFIG = {
         z: 0.4 - (Math.PI * 2), // Full 360 rotation around Z axis
       },
       mobileConfig: {
-        scale: { phase1Target: 0.90, minScale: 0.60 },
-        viewOffset: { maxOffsetX: 0.05, maxOffsetY: 0.1 }
+        scale: { phase1Target: 0.90, minScale: 0.70 },
+        viewOffset: { maxOffsetX: 0.03, maxOffsetY: 0.1 }
       }
     }
   ],

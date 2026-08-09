@@ -300,6 +300,22 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
             mat.clearcoat = materials.clearcoat
             mat.clearcoatRoughness = materials.clearcoatRoughness
           }
+
+          // CUSTOM SHADER INJECTION: 
+          // Completely disable sharp specular reflections from physical lights (recess, rim, overhead) 
+          // on the acrylic plate, while strictly preserving indirect HDRI environment reflections.
+          mat.onBeforeCompile = (shader) => {
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <aomap_fragment>',
+              `
+              #include <aomap_fragment>
+              reflectedLight.directSpecular = vec3(0.0);
+              #ifdef USE_CLEARCOAT
+                clearcoatSpecularDirect = vec3(0.0);
+              #endif
+              `
+            )
+          }
         } else if (!isLED) {
           // For BlackPLA, BlackPLA Dark, Brass Terminal: preserve exact authored roughness & metalness!
         }

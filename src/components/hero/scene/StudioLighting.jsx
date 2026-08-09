@@ -14,6 +14,7 @@ import { useScrollState } from '../ScrollContext'
  */
 export default memo(function StudioLighting() {
   const { size } = useThree()
+  
   const {
     recessLight,
     rimLight,
