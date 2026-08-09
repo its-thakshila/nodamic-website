@@ -75,7 +75,7 @@ export const MODEL_CONFIG = {
     },
     {
       // Screen 2: Final Scrolled Down
-      position: [0.2, -0.2, -0.8],
+      position: [0.5, -0.2, -1.5],
       baseRotation: {
         x: 1.2,
         y: -0.25,
@@ -184,6 +184,16 @@ export const STUDIO_LIGHTS = {
     castShadow: false,          // Preserves natural depth within socket holes
     shadowMapSize: 1024,
     shadowBias: -0.0001,
+    screens: {
+      1: {
+        position: [4.8, 1.5, 0.0],
+        intensity: 300.0
+      },
+      2: {
+        position: [4.8, 1.5, -2.0],
+        intensity: 700.0 // Tweak this value to control intensity specifically on Screen 2
+      }
+    }
   },
   rimLight: {
     position: [-3.5, 1.2, -4.5],
@@ -289,15 +299,22 @@ export const UI_CONTENT = {
       }
     },
     {
-      layoutVariant: 'split',
-      headingTitle: 'AEROSPACE',
-      headingSubtitle: 'GRADE',
-      ctaButtonText: 'VIEW SPECIFICATIONS',
+      layoutVariant: 'split-features',
+      headingTitle: 'Node 1',
+      headingSubtitle: 'Our First Build.',
+      ctaButtonText: '',
+      githubButton: true,
       bodyParagraph: {
-        desktop: 'Forged from a single block of titanium.\nThe brushed finish resists fingerprints while\nmaintaining an elegant, tactile temperature.',
-        tablet: 'Forged from a single block of titanium.\nThe brushed finish resists fingerprints.',
-        mobile: 'Forged from a single block of titanium. The brushed finish resists fingerprints while maintaining an elegant, tactile temperature.',
-      }
+        desktop: 'An open-source smart socket built\nto explore connected hardware.',
+        tablet: 'An open-source smart socket built\nto explore connected hardware.',
+        mobile: 'An open-source smart socket built to explore connected hardware.',
+      },
+      featuresList: [
+        { title: 'Remote Control', desc: 'Control your devices,\nwherever you are.' },
+        { title: 'Smart Scheduling', desc: 'Automate everyday routines\nwith ease.' },
+        { title: 'Power Cut Detection', desc: 'Detect unexpected interruptions,\ninstantly.' },
+        { title: 'Weather Alerts', desc: 'Stay ahead of changing\nweather conditions.' }
+      ]
     }
   ]
 }
