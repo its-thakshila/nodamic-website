@@ -37,6 +37,7 @@ export const ANIMATION_TIMING = {
 
 /* ─── Model Configuration ────────────────────────────────────────────────── */
 export const MODEL_CONFIG = {
+  debugResponsive: false, // Enables the Leva interactive keyframe recording UI
   path: import.meta.env.BASE_URL + 'models/Node1.glb',
   targetSize: 2.2,
   // Fallback defaults if screen tracking is off
@@ -82,8 +83,23 @@ export const MODEL_CONFIG = {
         z: 0.4 - (Math.PI * 2), // Full 360 rotation around Z axis
       },
       mobileConfig: {
-        scale: { phase1Target: 0.90, minScale: 0.70 },
-        viewOffset: { maxOffsetX: 0.03, maxOffsetY: 0.1 }
+        scale: { phase1Target: 0.90, minScale: 0.80, phase2Start: 1300 },
+        viewOffset: { minOffsetX: -0.18, minOffsetY: 0.10, maxOffsetX: 0.15, maxOffsetY: 0.10, breakpoint: 1300 },
+        snapMobileOnPortrait1024: true,
+        responsiveKeyframes: [
+          { width: 2560, height: 1440, offsetX: 0.04, offsetY: 0, scale: 1 },
+          { width: 1920, height: 1080, offsetX: -0.01, offsetY: 0, scale: 1 },
+          { width: 1440, height: 900, offsetX: -0.01, offsetY: 0, scale: 0.96 },
+          { width: 1366, height: 1024, offsetX: 0.01, offsetY: 0, scale: 0.85 },
+          { width: 1280, height: 800, offsetX: -0.18, offsetY: 0.06, scale: 0.92 },
+          { width: 1024, height: 1366, offsetX: -0.03, offsetY: 0, scale: 0.81 },
+          { width: 1024, height: 768, offsetX: -0.15, offsetY: 0.04, scale: 0.96 },
+          { width: 1024, height: 600, offsetX: -0.19, offsetY: -0.05, scale: 1.07 },
+          { width: 768, height: 1024, offsetX: 0.08, offsetY: 0.06, scale: 0.96 },
+          { width: 430, height: 932, offsetX: 0.15, offsetY: 0.08, scale: 0.77 },
+          { width: 390, height: 844, offsetX: 0.15, offsetY: 0.1, scale: 0.77 },
+          { width: 320, height: 568, offsetX: 0.14, offsetY: 0.08, scale: 0.84 }
+        ]
       }
     }
   ],

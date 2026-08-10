@@ -453,43 +453,118 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     // We store the current damped rotation directly in the group's rotation (or a ref) to avoid state
     if (groupRef.current) {
       // -------------------------------------------------------------
-      // Calculate target 2D Viewport Shifting for Mobile
+      // Calculate target 2D Viewport Shifting and Responsive Scale
       // -------------------------------------------------------------
-      const globalViewConf = MODEL_CONFIG.mobileConfig.viewOffset
       let targetOffsetX = 0
       let targetOffsetY = 0
-
-      if (state.size.width < globalViewConf.breakpoint) {
-        const pConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation
-          ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.viewOffset || globalViewConf)
-          : globalViewConf
-
-        const mobileProgress = Math.max(0, Math.min(1, (globalViewConf.breakpoint - state.size.width) / (globalViewConf.breakpoint - MODEL_CONFIG.mobileConfig.scale.minBreakpoint)))
-
-        targetOffsetX = (pConf.maxOffsetX || 0) * mobileProgress * state.size.width
-        targetOffsetY = (pConf.maxOffsetY || 0) * mobileProgress * state.size.height
-      }
-
-      // -------------------------------------------------------------
-      // Calculate target Responsive Scale for Mobile
-      // -------------------------------------------------------------
-      const aspectCompensation = window.innerHeight / state.size.height
       let mobileReduction = 1.0
 
-      const sConf = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation
-        ? (MODEL_CONFIG.screens[activeScreen].mobileConfig?.scale || MODEL_CONFIG.mobileConfig.scale)
-        : MODEL_CONFIG.mobileConfig.scale
+      const mConfig = activeBaseRot === MODEL_CONFIG.screens?.[activeScreen]?.baseRotation
+        ? (MODEL_CONFIG.screens[activeScreen].mobileConfig || MODEL_CONFIG.mobileConfig)
+        : MODEL_CONFIG.mobileConfig
 
-      const globalSConf = MODEL_CONFIG.mobileConfig.scale
+      const forceMobile = mConfig.snapMobileOnPortrait1024 && state.size.width < 1024 && state.size.height > state.size.width
+      const currentWidth = state.size.width
 
-      if (state.size.width < globalSConf.phase1Start && state.size.width >= globalSConf.phase2Start) {
-        const progress = (state.size.width - globalSConf.phase2Start) / (globalSConf.phase1Start - globalSConf.phase2Start)
-        mobileReduction = sConf.phase1Target + ((1.0 - sConf.phase1Target) * progress)
-      } else if (state.size.width < globalSConf.phase2Start) {
-        const progress = Math.max(0, Math.min(1, (state.size.width - globalSConf.minBreakpoint) / (globalSConf.phase2Start - globalSConf.minBreakpoint)))
-        mobileReduction = sConf.minScale + ((sConf.phase1Target - sConf.minScale) * progress)
+      if (MODEL_CONFIG.debugResponsive && window.__DEBUG_ENABLE) {
+        // Tweak Mode (Leva Overrides)
+        targetOffsetX = window.__DEBUG_OFFSET_X * state.size.width
+        targetOffsetY = window.__DEBUG_OFFSET_Y * state.size.height
+        mobileReduction = window.__DEBUG_SCALE
+      } else if (mConfig.responsiveKeyframes && mConfig.responsiveKeyframes.length > 0) {
+        // 2D Spatial Keyframe Interpolation (Inverse Distance Weighting)
+        const frames = mConfig.responsiveKeyframes
+        const currentHeight = state.size.height
+        
+        let totalWeight = 0
+        let weightedOffsetX = 0
+        let weightedOffsetY = 0
+        let weightedScale = 0
+        let exactMatch = null
+        
+        for (let i = 0; i < frames.length; i++) {
+          const frame = frames[i]
+          const dx = currentWidth - frame.width
+          // Support legacy 1D keyframes by ignoring height distance if missing
+          const dy = currentHeight - (frame.height || currentHeight)
+          
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          
+          if (distance < 1) { // Exact match threshold
+            exactMatch = frame
+            break
+          }
+          
+          // IDW Power = 4 (high decay ensures tighter snapping to nearest keyframes)
+          const weight = 1 / Math.pow(distance, 4)
+          totalWeight += weight
+          weightedOffsetX += frame.offsetX * weight
+          weightedOffsetY += frame.offsetY * weight
+          weightedScale += frame.scale * weight
+        }
+
+        let interpX, interpY, interpScale
+
+        if (exactMatch) {
+          interpX = exactMatch.offsetX
+          interpY = exactMatch.offsetY
+          interpScale = exactMatch.scale
+        } else {
+          interpX = weightedOffsetX / totalWeight
+          interpY = weightedOffsetY / totalWeight
+          interpScale = weightedScale / totalWeight
+        }
+
+        if (forceMobile) {
+          // Portrait snap override (fallback for safety)
+          const smallest = [...frames].sort((a, b) => a.width - b.width)[0]
+          interpX = smallest.offsetX
+          interpY = smallest.offsetY
+          interpScale = smallest.scale
+        }
+
+        targetOffsetX = interpX * state.size.width
+        targetOffsetY = interpY * state.size.height
+        mobileReduction = interpScale
+      } else {
+        // -------------------------------------------------------------
+        // Legacy Phase Math (Fallback)
+        // -------------------------------------------------------------
+        const globalViewConf = MODEL_CONFIG.mobileConfig.viewOffset
+        const pConf = mConfig.viewOffset || globalViewConf
+        const currentBreakpoint = pConf.breakpoint || globalViewConf.breakpoint
+
+        if (state.size.width < currentBreakpoint) {
+          let mobileProgress = Math.max(0, Math.min(1, (currentBreakpoint - state.size.width) / (currentBreakpoint - MODEL_CONFIG.mobileConfig.scale.minBreakpoint)))
+          if (forceMobile) mobileProgress = 1.0
+          
+          const minOffsetX = pConf.minOffsetX || 0
+          const minOffsetY = pConf.minOffsetY || 0
+          const currentOffsetX = minOffsetX + ((pConf.maxOffsetX || 0) - minOffsetX) * mobileProgress
+          const currentOffsetY = minOffsetY + ((pConf.maxOffsetY || 0) - minOffsetY) * mobileProgress
+
+          targetOffsetX = currentOffsetX * state.size.width
+          targetOffsetY = currentOffsetY * state.size.height
+        }
+
+        const sConf = mConfig.scale || MODEL_CONFIG.mobileConfig.scale
+        const globalSConf = MODEL_CONFIG.mobileConfig.scale
+        const currentPhase2Start = sConf.phase2Start || globalSConf.phase2Start
+
+        if (state.size.width < globalSConf.phase1Start && state.size.width >= currentPhase2Start) {
+          const progress = (state.size.width - currentPhase2Start) / (globalSConf.phase1Start - currentPhase2Start)
+          mobileReduction = sConf.phase1Target + ((1.0 - sConf.phase1Target) * progress)
+        } else if (state.size.width < currentPhase2Start) {
+          const progress = Math.max(0, Math.min(1, (state.size.width - globalSConf.minBreakpoint) / (currentPhase2Start - globalSConf.minBreakpoint)))
+          mobileReduction = sConf.minScale + ((sConf.phase1Target - sConf.minScale) * progress)
+        }
+
+        if (forceMobile) {
+          mobileReduction = sConf.minScale
+        }
       }
 
+      const aspectCompensation = window.innerHeight / state.size.height
       const targetResponsiveScale = aspectCompensation * mobileReduction
 
       // -------------------------------------------------------------
