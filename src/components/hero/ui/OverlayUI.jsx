@@ -52,7 +52,7 @@ const fadeIn = {
  */
 export default memo(function OverlayUI({ isLoaded = false }) {
   const iconRef = useRef(null)
-  const { activeScreen } = useScrollState() || { activeScreen: 0 }
+  const { activeScreen, setActiveScreen } = useScrollState() || { activeScreen: 0, setActiveScreen: () => {} }
   const screenContent = UI_CONTENT.screens[activeScreen] || UI_CONTENT.screens[0]
 
   // Reset animations when screen changes
@@ -132,6 +132,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                       className="flex items-center gap-3 pointer-events-auto bg-transparent w-auto h-auto text-white/90 hover:text-white transition-colors duration-300 font-outfit uppercase tracking-[0.08em] lg:text-[clamp(0.7rem,1.1vw,1.05rem)] lg:whitespace-nowrap"
                       onMouseEnter={() => iconRef.current?.startAnimation?.()}
                       onMouseLeave={() => iconRef.current?.stopAnimation?.()}
+                      onClick={() => setActiveScreen(1)}
                     >
                       <SquareChevronDownIcon ref={iconRef} size={20} className="shrink-0" />
                       <span className="leading-none pt-[0.15em]">{screenContent.ctaButtonText}</span>
@@ -185,7 +186,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                 {/* GITHUB BUTTON */}
                 {screenContent.githubButton && (
                   <motion.a
-                    href="https://github.com"
+                    href="https://github.com/its-thakshila/nodamic-smart-power-socket"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-6 lg:mt-8 flex items-center gap-2 text-white font-outfit text-[1.1rem] lg:text-[1.4rem] font-[500] tracking-wide pointer-events-auto hover:opacity-75 transition-opacity"
@@ -249,6 +250,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                   <button
                     id="mobile-scroll-btn"
                     className="flex items-center justify-start gap-3 pointer-events-auto bg-transparent w-full min-h-[48px] text-white/90 hover:text-white transition-colors duration-300 font-outfit uppercase tracking-[0.08em] text-[clamp(0.75rem,3.9vw,0.95rem)]"
+                    onClick={() => setActiveScreen(1)}
                   >
                     <SquareChevronDownIcon size={20} className="shrink-0" />
                     <span className="leading-none pt-[0.15em]">{screenContent.ctaButtonText}</span>
