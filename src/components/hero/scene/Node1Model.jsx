@@ -18,6 +18,10 @@ function easeInOutCubic(x) {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
 }
 
+function easeOutExpo(x) {
+  return x === 1 ? 1 : 1 - Math.pow(2, -10 * x)
+}
+
 /* ─── Radial Halo Texture Generator ───────────────────────────────────────── */
 function createHaloTexture() {
   if (typeof document === 'undefined') return null
@@ -93,7 +97,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       if (!dragStateRef.current.isDragging || activeScreenRef.current !== 2) return
       const currentX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0)
       const deltaX = currentX - dragStateRef.current.startX
-      
+
       // Map screen width to a full 360 degree rotation (Math.PI * 2)
       // Dragging right rotates positive, dragging left rotates negative
       dragStateRef.current.targetDragRot += (deltaX / window.innerWidth) * Math.PI * 2
@@ -102,7 +106,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
     const handlePointerUp = () => {
       dragStateRef.current.isDragging = false
-      
+
       // Calculate the nearest multiple of 2*PI to avoid unwinding multiple full rotations
       const currentRot = dragStateRef.current.currentDragRot
       const closestReset = Math.round(currentRot / (Math.PI * 2)) * (Math.PI * 2)
@@ -113,7 +117,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
     window.addEventListener('pointercancel', handlePointerUp)
-    
+
     // Touch fallbacks
     window.addEventListener('touchstart', handlePointerDown, { passive: true })
     window.addEventListener('touchmove', handlePointerMove, { passive: true })
@@ -412,10 +416,10 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     // Desktop and landscape/tablet rely on absolute pointer position tracking.
     // On small portrait phone screens, we lock the rotation to zero so touch dragging doesn't move the model.
     const isSmallPortrait = size.width < 768 && size.height > size.width
-    
+
     // Increase vertical tilt range when actively dragging on Screen 2
     const dragTiltMultiplier = (dragStateRef.current.isDragging && activeScreen === 2) ? 2.5 : 1.0
-    
+
     const targetX = isSmallPortrait ? 0 : -pointer.y * MODEL_CONFIG.mouseSensitivity.y * sensitivityMultiplier * dragTiltMultiplier
     const targetY = isSmallPortrait ? 0 : pointer.x * MODEL_CONFIG.mouseSensitivity.x * sensitivityMultiplier
 
@@ -475,26 +479,26 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
         // 2D Spatial Keyframe Interpolation (Inverse Distance Weighting)
         const frames = mConfig.responsiveKeyframes
         const currentHeight = state.size.height
-        
+
         let totalWeight = 0
         let weightedOffsetX = 0
         let weightedOffsetY = 0
         let weightedScale = 0
         let exactMatch = null
-        
+
         for (let i = 0; i < frames.length; i++) {
           const frame = frames[i]
           const dx = currentWidth - frame.width
           // Support legacy 1D keyframes by ignoring height distance if missing
           const dy = currentHeight - (frame.height || currentHeight)
-          
+
           const distance = Math.sqrt(dx * dx + dy * dy)
-          
+
           if (distance < 1) { // Exact match threshold
             exactMatch = frame
             break
           }
-          
+
           // IDW Power = 4 (high decay ensures tighter snapping to nearest keyframes)
           const weight = 1 / Math.pow(distance, 4)
           totalWeight += weight
@@ -537,7 +541,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
         if (state.size.width < currentBreakpoint) {
           let mobileProgress = Math.max(0, Math.min(1, (currentBreakpoint - state.size.width) / (currentBreakpoint - MODEL_CONFIG.mobileConfig.scale.minBreakpoint)))
           if (forceMobile) mobileProgress = 1.0
-          
+
           const minOffsetX = pConf.minOffsetX || 0
           const minOffsetY = pConf.minOffsetY || 0
           const currentOffsetX = minOffsetX + ((pConf.maxOffsetX || 0) - minOffsetX) * mobileProgress
@@ -574,32 +578,31 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
       // If screen changed, initialize a new transition from EXACTLY where we are right now
       if (activeScreen !== trans.lastScreen) {
-        // Use the cinematic time-based easeInOut ONLY for the 360-spin
-        if ((trans.lastScreen === 1 && activeScreen === 2) || (trans.lastScreen === 2 && activeScreen === 1)) {
-          trans.isTransitioning = true
-          trans.duration = 2.0
-          trans.startTime = state.clock.elapsedTime
-          
-          trans.startRot = {
-            x: groupRef.current.userData.baseRotX ?? activeBaseRot.x,
-            y: groupRef.current.userData.baseRotY ?? activeBaseRot.y,
-            z: groupRef.current.userData.baseRotZ ?? activeBaseRot.z
-          }
-          trans.startPos = [
-            groupRef.current.userData.posX ?? activePosition[0],
-            groupRef.current.userData.posY ?? activePosition[1],
-            groupRef.current.userData.posZ ?? activePosition[2]
-          ]
-          trans.startOffset = {
-            x: state.camera.userData.offsetX ?? targetOffsetX,
-            y: state.camera.userData.offsetY ?? targetOffsetY
-          }
-          trans.startScale = groupRef.current.userData.respScale ?? targetResponsiveScale
-        } else {
-          // Standard transitions rely on exponential damping instead
-          trans.isTransitioning = false
+        // Use time-based curves for all screen transitions to ensure perfect smoothness on low-end devices
+        trans.isTransitioning = true
+
+        const isSpin = (trans.lastScreen === 1 && activeScreen === 2) || (trans.lastScreen === 2 && activeScreen === 1)
+        trans.duration = isSpin ? 2.0 : 2.0
+        trans.isSpin = isSpin
+
+        trans.startTime = state.clock.elapsedTime
+
+        trans.startRot = {
+          x: groupRef.current.userData.baseRotX ?? activeBaseRot.x,
+          y: groupRef.current.userData.baseRotY ?? activeBaseRot.y,
+          z: groupRef.current.userData.baseRotZ ?? activeBaseRot.z
         }
-        
+        trans.startPos = [
+          groupRef.current.userData.posX ?? activePosition[0],
+          groupRef.current.userData.posY ?? activePosition[1],
+          groupRef.current.userData.posZ ?? activePosition[2]
+        ]
+        trans.startOffset = {
+          x: state.camera.userData.offsetX ?? targetOffsetX,
+          y: state.camera.userData.offsetY ?? targetOffsetY
+        }
+        trans.startScale = groupRef.current.userData.respScale ?? targetResponsiveScale
+
         trans.lastScreen = activeScreen
       }
 
@@ -616,13 +619,13 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       if (trans.isTransitioning) {
         const elapsed = state.clock.elapsedTime - trans.startTime
         const rawProgress = elapsed / trans.duration
-        
+
         if (rawProgress >= 1) {
           trans.isTransitioning = false
         } else {
-          // Time-based cinematic easeInOutCubic transition
-          const ease = easeInOutCubic(rawProgress)
-          
+          // Time-based transition: Cinematic easeInOut for the spin, snappy easeOutExpo (like damping) for others
+          const ease = trans.isSpin ? easeInOutCubic(rawProgress) : easeOutExpo(rawProgress)
+
           currentBaseRotX = lerp(trans.startRot.x, activeBaseRot.x, ease)
           currentBaseRotY = lerp(trans.startRot.y, activeBaseRot.y, ease)
           currentBaseRotZ = lerp(trans.startRot.z, activeBaseRot.z, ease)
@@ -633,7 +636,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
           currentOffsetX = lerp(trans.startOffset.x, targetOffsetX, ease)
           currentOffsetY = lerp(trans.startOffset.y, targetOffsetY, ease)
-          
+
           currentRespScale = lerp(trans.startScale, targetResponsiveScale, ease)
         }
       } else {
@@ -649,7 +652,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
 
         currentOffsetX = dampRot(state.camera.userData.offsetX ?? targetOffsetX, targetOffsetX, 3, safeDelta)
         currentOffsetY = dampRot(state.camera.userData.offsetY ?? targetOffsetY, targetOffsetY, 3, safeDelta)
-        
+
         currentRespScale = dampRot(groupRef.current.userData.respScale ?? targetResponsiveScale, targetResponsiveScale, 3, safeDelta)
       }
 
@@ -678,10 +681,10 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       groupRef.current.rotation.x = currentBaseRotX + rotation.current.x
       groupRef.current.rotation.y = currentBaseRotY + rotation.current.y + intro.yOffset
       groupRef.current.rotation.z = currentBaseRotZ + intro.zOffset
-      
+
       // Ensure groupRef remains centered within outerGroupRef
       groupRef.current.position.set(0, 0, 0)
-      
+
       // Apply the position and drag spin to the outer wrapper 
       // This ensures it translates first, then spins in-place around the World Y-axis!
       if (outerGroupRef.current) {
