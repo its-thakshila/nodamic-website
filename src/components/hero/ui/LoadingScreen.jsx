@@ -76,7 +76,7 @@ export default memo(function LoadingScreen({ onReady, isModelRendered }) {
     >
       {/* Cycling status message */}
       <p
-        className="font-outfit text-[0.75rem] tracking-[0.12em] text-white/40 transition-opacity select-none"
+        className="font-outfit text-sm tracking-[0.12em] text-white/40 transition-opacity select-none"
         style={{
           opacity: msgVisible ? 1 : 0,
           transition: `opacity ${MESSAGE_FADE_MS}ms ease-in-out`,
