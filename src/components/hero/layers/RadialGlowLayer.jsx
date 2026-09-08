@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 import { useViewportProgress } from '../../../hooks/useViewportProgress'
+import { useScrollState } from '../ScrollContext'
 
 /*
  * Layer 3 (z-30): RadialGlowLayer
@@ -9,6 +10,9 @@ import { useViewportProgress } from '../../../hooks/useViewportProgress'
  */
 export default memo(function RadialGlowLayer() {
   const { mobile: progress } = useViewportProgress()
+  const scrollState = useScrollState()
+  const activeScreen = scrollState ? scrollState.activeScreen : 0
+  const isFaded = activeScreen >= 3
 
   // Interpolate tracking parameters
   const top = 53 - (15 * progress)  // 53% desktop -> 38% mobile
@@ -17,8 +21,8 @@ export default memo(function RadialGlowLayer() {
 
   return (
     <div
-      className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none"
-      style={{ zIndex: LAYER_Z_INDEX.radialGlow, mixBlendMode: 'screen' }}
+      className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none transition-opacity duration-[1500ms] ease-in-out"
+      style={{ zIndex: LAYER_Z_INDEX.radialGlow, opacity: isFaded ? 0 : 1, mixBlendMode: 'screen' }}
       aria-hidden="true"
     >
       {/* Layout wrapper: Handles responsive positioning without CSS animation conflicts */}

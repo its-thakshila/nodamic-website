@@ -13,7 +13,7 @@ import LoadingScreen from './ui/LoadingScreen'
 // import MobileDiagnosticUI from './MobileDiagnosticUI'
 
 import { ScrollProvider } from './ScrollContext'
-import { MODEL_CONFIG } from '../../config/hero.config'
+import { MODEL_CONFIG, DEBUG_FLAGS } from '../../config/hero.config'
 import ResponsiveDebugger from './debug/ResponsiveDebugger'
 
 /*
@@ -35,20 +35,20 @@ export default function Hero() {
   }, [])
 
   return (
-    <ScrollProvider totalScreens={3}>
+    <ScrollProvider totalScreens={4}>
       {MODEL_CONFIG.debugResponsive && <ResponsiveDebugger />}
       <section className="relative w-full h-[100svh] lg:h-screen overflow-hidden bg-[#0a0a0a] isolate">
         {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}
-        <BackgroundLayer />
+        {DEBUG_FLAGS.showBackgroundLayer && <BackgroundLayer />}
 
         {/* Layer 1 (z-10): Very subtle procedural base texture grain */}
-        <NoiseLayer />
+        {DEBUG_FLAGS.showNoiseLayer && <NoiseLayer />}
 
         {/* Layer 2 (z-20): Large cinematic studio softbox light beam with drift */}
-        <LightBeamLayer />
+        {DEBUG_FLAGS.showLightBeamLayer && <LightBeamLayer />}
 
         {/* Layer 3 (z-30): Soft separation glow positioned directly behind the product */}
-        <RadialGlowLayer />
+        {DEBUG_FLAGS.showRadialGlowLayer && <RadialGlowLayer />}
 
         {/* Layer 4 (z-40): React Three Fiber showcase canvas (transparent background) */}
         <WebGLErrorBoundary>
@@ -56,13 +56,13 @@ export default function Hero() {
         </WebGLErrorBoundary>
 
         {/* Layer 5 (z-50): CSS atmospheric soft diagonal tempered glass reflections */}
-        <ReflectionLayer />
+        {DEBUG_FLAGS.showReflectionLayer && <ReflectionLayer />}
 
         {/* Layer 6 (z-60): All interactive elements (Logo, Nav, Title, Paragraph, CTA) */}
-        <OverlayUI isLoaded={isSceneReady} />
+        {DEBUG_FLAGS.showOverlayUI && <OverlayUI isLoaded={isSceneReady} />}
 
         {/* Layer 7 (z-70): Unifying foreground film grain (~1.8% opacity) */}
-        <ForegroundGrainLayer />
+        {DEBUG_FLAGS.showForegroundGrainLayer && <ForegroundGrainLayer />}
 
         <LoadingScreen onReady={handleSceneReady} isModelRendered={isModelRendered} />
 

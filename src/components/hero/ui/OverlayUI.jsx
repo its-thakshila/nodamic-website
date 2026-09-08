@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SquareChevronDownIcon } from './SquareChevronDownIcon'
 import { GitHubIcon } from './GitHubIcon'
 import Header from './Header'
+import TeamScreen from './TeamScreen'
 import { UI_CONTENT, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../../config/hero.config'
 import { useScrollState } from '../ScrollContext'
 
@@ -73,15 +74,22 @@ export default memo(function OverlayUI({ isLoaded = false }) {
         {isLoaded && (
           <motion.div
             key={animationKey}
-            className={`flex-1 flex flex-col lg:justify-end lg:gap-0 lg:col-span-12 lg:grid lg:grid-cols-12 lg:gap-x-[clamp(2rem,3.1vw,3rem)] relative z-40 w-full ${
-              screenContent.layoutVariant === 'split-features'
-                ? 'lg:row-start-2 lg:content-center lg:pb-[clamp(9rem,16svh,12rem)] min-[1300px]:pb-0 [@media(max-height:730px)]:!pb-0'
-                : 'lg:row-start-3 lg:items-end lg:pb-[clamp(3.3rem,5.2vw,5rem)]'
-            } ${screenContent.layoutVariant === 'stacked-left' ? 'justify-center' : 'justify-between'}`}
+            className={`flex-1 flex flex-col lg:col-span-12 relative z-40 w-full ${
+              screenContent.layoutVariant === 'team'
+                ? 'lg:row-start-2 lg:row-span-2 lg:items-start lg:justify-start'
+                : screenContent.layoutVariant === 'split-features'
+                  ? 'lg:justify-end lg:gap-0 lg:grid lg:grid-cols-12 lg:gap-x-[clamp(2rem,3.1vw,3rem)] lg:row-start-2 lg:content-center lg:pb-[clamp(9rem,16svh,12rem)] min-[1300px]:pb-0 [@media(max-height:600px)]:!pb-0'
+                  : 'lg:justify-end lg:gap-0 lg:grid lg:grid-cols-12 lg:gap-x-[clamp(2rem,3.1vw,3rem)] lg:row-start-3 lg:items-end lg:pb-[clamp(3.3rem,5.2vw,5rem)]'
+            } ${(screenContent.layoutVariant === 'stacked-left' || screenContent.layoutVariant === 'team') ? 'justify-center' : 'justify-between'}`}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
+            {/* Team Screen: completely bypasses the standard layout for the 'team' variant */}
+            {screenContent.layoutVariant === 'team' ? (
+              <TeamScreen />
+            ) : (
+            <>
             {/* Product Placeholder for Mobile Flexbox Composition (absorbs extra vertical space) */}
             {screenContent.layoutVariant !== 'stacked-left' && (
               <div className="w-full flex-[1.5] min-h-[30svh] shrink-0 lg:hidden" />
@@ -117,11 +125,11 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                 <motion.h1
                   custom={0}
                   variants={fadeUp}
-                  className="font-outfit text-[min(clamp(2.5rem,18.5vw,4.5rem),8svh)] md:text-[clamp(4.5rem,9.0vw,8.6rem)] font-[400] leading-[0.88] text-white relative z-10 lg:whitespace-nowrap -ml-[0.04em]"
+                  className="font-outfit text-[min(clamp(2.5rem,18.5vw,4.2rem),8svh)] sm:text-[clamp(3.8rem,10vw,4.5rem)] md:text-[clamp(4.5rem,7.5vw,6rem)] lg:text-[clamp(5rem,9.0vw,8.6rem)] font-[400] leading-[0.88] text-white relative z-10 lg:whitespace-nowrap -ml-[0.04em]"
                   style={{ letterSpacing: '-0.035em' }}
                 >
                   {screenContent.headingTitle}<br />
-                  <span className="text-[0.8em]">{screenContent.headingSubtitle}</span>
+                  <span className={screenContent.subtitleSameSize ? undefined : 'text-[0.8em]'}>{screenContent.headingSubtitle}</span>
                 </motion.h1>
 
                 {/* DESKTOP CTA */}
@@ -157,7 +165,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                 }}
               >
                 <p
-                  className={`font-outfit text-[min(clamp(1rem,5.6vw,1.35rem),2.5svh)] sm:text-[1.45rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 lg:whitespace-nowrap ${
+                  className={`font-outfit text-[min(clamp(1rem,5.6vw,1.2rem),2.4svh)] sm:text-[1.15rem] md:text-[1.3rem] lg:text-[clamp(1.25rem,2.0vw,1.9rem)] font-light leading-[1.25] lg:leading-[1.15] text-white/70 lg:text-white/80 lg:whitespace-nowrap ${
                     (screenContent.layoutVariant === 'stacked-left' || screenContent.layoutVariant === 'split-features') ? 'text-left' : 'text-left lg:text-right'
                     }`}
                   style={{ letterSpacing: '0.001em' }}
@@ -201,7 +209,7 @@ export default memo(function OverlayUI({ isLoaded = false }) {
               {/* FEATURES LIST (For Screen 2) */}
               {screenContent.featuresList && (
                 <motion.div
-                  className={`hidden lg:flex flex-col w-full [@media(max-height:730px)]:!hidden ${
+                  className={`hidden lg:flex flex-col w-full [@media(max-height:730px)]:[zoom:0.8] [@media(max-height:600px)]:!hidden ${
                     screenContent.layoutVariant === 'stacked-left'
                       ? 'lg:col-span-5 lg:col-start-8 self-start lg:self-center lg:-translate-y-[14svh] gap-6 lg:gap-8 mt-8 lg:mt-0'
                       : 'lg:absolute lg:bottom-0 lg:left-0 lg:pb-[clamp(2.5rem,4vw,4rem)] min-[1300px]:relative min-[1300px]:col-start-10 min-[1300px]:col-span-3 min-[1300px]:row-start-1 min-[1300px]:row-span-2 min-[1300px]:self-center min-[1300px]:bottom-auto min-[1300px]:left-auto min-[1300px]:pb-0'
@@ -225,10 +233,10 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                   }`}>
                     {screenContent.featuresList.map((feat, idx) => (
                       <div key={idx} className="flex flex-col gap-1 lg:gap-1.5 min-w-0">
-                        <h3 className="font-outfit text-white text-[min(clamp(1.1rem,5vw,1.4rem),2.5svh)] sm:text-[1.5rem] lg:text-[clamp(1.25rem,1.9vw,1.85rem)] font-[500] tracking-wide">
+                        <h3 className="font-outfit text-white text-[min(clamp(1.1rem,5vw,1.3rem),2.3svh)] sm:text-[1.2rem] md:text-[1.4rem] lg:text-[clamp(1.25rem,1.9vw,1.85rem)] font-[500] tracking-wide">
                           {feat.title}
                         </h3>
-                        <p className="font-outfit text-white/70 text-[min(clamp(0.95rem,4vw,1.15rem),2svh)] sm:text-[1.2rem] lg:text-[clamp(0.95rem,1.3vw,1.25rem)] leading-[1.3] whitespace-pre-line font-[300]">
+                        <p className="font-outfit text-white/70 text-[min(clamp(0.95rem,4vw,1.1rem),1.9svh)] sm:text-[1.05rem] md:text-[1.15rem] lg:text-[clamp(0.95rem,1.3vw,1.25rem)] leading-[1.3] whitespace-pre-line font-[300]">
                           {feat.desc}
                         </p>
                       </div>
@@ -258,6 +266,8 @@ export default memo(function OverlayUI({ isLoaded = false }) {
                 </motion.div>
               )}
             </div>
+            </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

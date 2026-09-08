@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 import { useViewportProgress } from '../../../hooks/useViewportProgress'
+import { useScrollState } from '../ScrollContext'
 
 /*
  * Layer 5 (z-50): ReflectionLayer
@@ -9,6 +10,9 @@ import { useViewportProgress } from '../../../hooks/useViewportProgress'
  */
 export default memo(function ReflectionLayer() {
   const { mobile: progress } = useViewportProgress()
+  const scrollState = useScrollState()
+  const activeScreen = scrollState ? scrollState.activeScreen : 0
+  const isFaded = activeScreen >= 3
 
   // Interpolate tracking parameters (relative offsets since animation provides base values)
   const left = -35 - (6 * progress)  // -35% -> -41%
@@ -17,8 +21,8 @@ export default memo(function ReflectionLayer() {
 
   return (
     <div
-      className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none"
-      style={{ zIndex: LAYER_Z_INDEX.reflection, opacity: 0.12, mixBlendMode: 'plus-lighter' }}
+      className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none transition-opacity duration-[1500ms] ease-in-out"
+      style={{ zIndex: LAYER_Z_INDEX.reflection, opacity: isFaded ? 0 : 0.12, mixBlendMode: 'plus-lighter' }}
       aria-hidden="true"
     >
       {/* Layout wrapper: Handles responsive positioning without CSS animation conflicts */}

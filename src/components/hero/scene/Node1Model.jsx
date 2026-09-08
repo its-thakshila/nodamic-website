@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useMemo, memo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { MODEL_CONFIG, ANIMATION_TIMING } from '../../../config/hero.config'
+import { MODEL_CONFIG, ANIMATION_TIMING, BREAKPOINTS } from '../../../config/hero.config'
 import { useDiagnostic } from '../DiagnosticContext'
 import { useScrollState } from '../ScrollContext'
 
@@ -16,6 +16,10 @@ function lerp(a, b, t) {
 /* ─── Easing Functions ────────────────────────────────────────────────────── */
 function easeInOutCubic(x) {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
+}
+
+function easeInOutSine(x) {
+  return -(Math.cos(Math.PI * x) - 1) / 2
 }
 
 function easeOutExpo(x) {
@@ -145,13 +149,14 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   const rotation = useRef({ x: 0, y: 0 })
   const { pointer, size, gl, camera } = useThree()
 
-  const isMobile = size.width < 1024
+  const isMobile = size.width < BREAKPOINTS.lg
 
   // High-performance animation references and current state tracking (zero React re-renders)
   const switchMeshRef = useRef(null)
   const ledMeshRef = useRef(null)
   const ledMaterialRef = useRef(null)
   const haloMaterialRef = useRef(null)
+  const materialsRef = useRef([])
   // Invisible hit-zone box — direct child of the Switch_Head mesh.
   // Inherits all position.z mutations automatically; no per-frame tracking required.
   const hitZoneRef = useRef(null)
@@ -159,6 +164,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     switchZ: 0,
     emissive: MODEL_CONFIG.materials.emissiveIntensity,
     haloOpacity: 0.85,
+    modelOpacity: 1.0,
   })
 
   // Load intro animation — starts at offset from baseRotation, decays to zero after a short delay
@@ -177,12 +183,62 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
   const screenTransitionRef = useRef({
     startTime: null,
     isTransitioning: false,
-    duration: 2.2, // increased total delay for cinematic ease
+    duration: 2.0,
     lastScreen: 0,
+    fromScreen: 0,
     startRot: { x: 0, y: 0, z: 0 },
     startPos: [0, 0, 0],
-    startOffset: { x: 0, y: 0 }
+    startOffset: { x: 0, y: 0 },
+    startScale: 1.0,
+    isSpin: false
   })
+
+  // Helper to inject our cinematic screen-door fade shader
+  const injectFadeShader = (mat, isAcrylic) => {
+    mat.onBeforeCompile = (shader) => {
+      mat.userData.shader = shader
+      shader.uniforms.uFade = { value: 1.0 }
+
+      const bayerFunction = `
+        uniform float uFade;
+        float bayerDither8x8(vec2 p) {
+          vec2 P1 = mod(p, 2.0);
+          vec2 P2 = mod(floor(0.5 * p), 2.0);
+          vec2 P3 = mod(floor(0.25 * p), 2.0);
+          float b2_1 = mod(3.0 * P1.y + 2.0 * P1.x, 4.0);
+          float b2_2 = mod(3.0 * P2.y + 2.0 * P2.x, 4.0);
+          float b2_3 = mod(3.0 * P3.y + 2.0 * P3.x, 4.0);
+          return (16.0 * b2_1 + 4.0 * b2_2 + b2_3) / 64.0;
+        }
+      `
+      shader.fragmentShader = bayerFunction + '\n' + shader.fragmentShader
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <dithering_fragment>',
+        `
+        #include <dithering_fragment>
+        if (uFade < 0.999) {
+          float bayer = bayerDither8x8(floor(gl_FragCoord.xy));
+          if (uFade <= bayer) discard;
+        }
+        `
+      )
+
+      if (isAcrylic) {
+        // Disable sharp specular reflections from physical lights on the acrylic plate
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <aomap_fragment>',
+          `
+          #include <aomap_fragment>
+          reflectedLight.directSpecular = vec3(0.0);
+          #ifdef USE_CLEARCOAT
+            clearcoatSpecularDirect = vec3(0.0);
+          #endif
+          `
+        )
+      }
+    }
+  }
 
   const INTRO_DELAY = ANIMATION_TIMING.introDelay  // seconds before the settle animation begins
 
@@ -213,6 +269,8 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     if (!scene) return
 
     const { materials } = MODEL_CONFIG
+    materialsRef.current = []
+
 
     scene.traverse((child) => {
       if (child.name === '__switch_hit__') return
@@ -305,21 +363,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
             mat.clearcoatRoughness = materials.clearcoatRoughness
           }
 
-          // CUSTOM SHADER INJECTION: 
-          // Completely disable sharp specular reflections from physical lights (recess, rim, overhead) 
-          // on the acrylic plate, while strictly preserving indirect HDRI environment reflections.
-          mat.onBeforeCompile = (shader) => {
-            shader.fragmentShader = shader.fragmentShader.replace(
-              '#include <aomap_fragment>',
-              `
-              #include <aomap_fragment>
-              reflectedLight.directSpecular = vec3(0.0);
-              #ifdef USE_CLEARCOAT
-                clearcoatSpecularDirect = vec3(0.0);
-              #endif
-              `
-            )
-          }
+          // Shader injection is handled centrally now
         } else if (!isLED) {
           // For BlackPLA, BlackPLA Dark, Brass Terminal: preserve exact authored roughness & metalness!
         }
@@ -344,7 +388,15 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
           if (isLED) {
             ledMaterialRef.current = basicMat
           }
+          basicMat.userData.originalOpacity = basicMat.opacity !== undefined ? basicMat.opacity : 1.0
+          basicMat.userData.originalTransparent = basicMat.transparent
+          injectFadeShader(basicMat, isAcrylic)
+          materialsRef.current.push(basicMat)
         } else {
+          mat.userData.originalOpacity = mat.opacity !== undefined ? mat.opacity : 1.0
+          mat.userData.originalTransparent = mat.transparent
+          injectFadeShader(mat, isAcrylic)
+          materialsRef.current.push(mat)
           mat.needsUpdate = true
         }
       }
@@ -581,8 +633,12 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
         // Use time-based curves for all screen transitions to ensure perfect smoothness on low-end devices
         trans.isTransitioning = true
 
-        const isSpin = (trans.lastScreen === 1 && activeScreen === 2) || (trans.lastScreen === 2 && activeScreen === 1)
-        trans.duration = isSpin ? 2.0 : 2.0
+        const isSpin = (trans.lastScreen === 1 && activeScreen === 2) ||
+          (trans.lastScreen === 2 && activeScreen === 1) ||
+          (trans.lastScreen === 2 && activeScreen === 3)
+
+        // Give the 2->3 transition a faster duration, keep the others at 2.0s
+        trans.duration = (trans.lastScreen === 2 && activeScreen === 3) ? 1.5 : 2.0
         trans.isSpin = isSpin
 
         trans.startTime = state.clock.elapsedTime
@@ -603,6 +659,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
         }
         trans.startScale = groupRef.current.userData.respScale ?? targetResponsiveScale
 
+        trans.fromScreen = trans.lastScreen
         trans.lastScreen = activeScreen
       }
 
@@ -624,7 +681,14 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
           trans.isTransitioning = false
         } else {
           // Time-based transition: Cinematic easeInOut for the spin, snappy easeOutExpo (like damping) for others
-          const ease = trans.isSpin ? easeInOutCubic(rawProgress) : easeOutExpo(rawProgress)
+          let ease = 0
+          if (trans.lastScreen === 2 && activeScreen === 3) {
+            ease = easeInOutSine(rawProgress) // Mid-range start for 2->3
+          } else if (trans.isSpin) {
+            ease = easeInOutCubic(rawProgress) // Slow start for 1<->2 spin
+          } else {
+            ease = easeOutExpo(rawProgress) // Snappy damping-like fallback
+          }
 
           currentBaseRotX = lerp(trans.startRot.x, activeBaseRot.x, ease)
           currentBaseRotY = lerp(trans.startRot.y, activeBaseRot.y, ease)
@@ -712,6 +776,8 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     animValues.current.emissive = damp(animValues.current.emissive, targetEmissive, 12, safeDelta)
     animValues.current.haloOpacity = damp(animValues.current.haloOpacity, targetHaloOpacity, 12, safeDelta)
 
+    const currentOpacity = animValues.current.modelOpacity
+
     // Directly mutate Three.js instances without triggering React state changes
     if (switchMeshRef.current) {
       switchMeshRef.current.position.z = animValues.current.switchZ
@@ -719,7 +785,9 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
     }
 
     if (ledMaterialRef.current) {
-      ledMaterialRef.current.emissiveIntensity = animValues.current.emissive
+      // Multiply by currentOpacity to kill the bloom glow when the model is actively fading out
+      ledMaterialRef.current.emissiveIntensity = animValues.current.emissive * currentOpacity
+
       // Physically transition base diffuse color between bright lit white and dark unlit bulb
       const targetColor = isOn ? LED_COLOR_ON : LED_COLOR_OFF
       const targetEmissiveColor = isOn ? LED_EMISSIVE_ON : LED_EMISSIVE_OFF
@@ -727,9 +795,43 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       ledMaterialRef.current.emissive.lerp(targetEmissiveColor, 0.15)
     }
     if (haloMaterialRef.current) {
-      haloMaterialRef.current.opacity = animValues.current.haloOpacity
-      haloMaterialRef.current.visible = animValues.current.haloOpacity > 0.005
+      haloMaterialRef.current.opacity = animValues.current.haloOpacity * animValues.current.modelOpacity
+      haloMaterialRef.current.visible = haloMaterialRef.current.opacity > 0.005
     }
+
+    // 3. Cinematic Fade Logic for Screen 3
+    let targetModelOpacity = activeScreen === 3 ? 0.0 : 1.0
+    const trans = screenTransitionRef.current
+
+    // Explicitly map the opacity to the transition progress timeline
+    if (trans.isTransitioning) {
+      const elapsed = state.clock.elapsedTime - trans.startTime
+      const rawProgress = Math.max(0, Math.min(1, elapsed / trans.duration))
+
+      // Fading OUT (Scrolling TO Screen 3)
+      if (activeScreen === 3) {
+        const fadeStart = 0.30 // Start fading out at 60% of the movement
+        const fadeEnd = 0.45   // Completely invisible by 95%
+        targetModelOpacity = 1.0 - Math.max(0, Math.min(1, (rawProgress - fadeStart) / (fadeEnd - fadeStart)))
+      }
+      // Fading IN (Scrolling FROM Screen 3 back to Screen 2)
+      else if (trans.fromScreen === 3 && activeScreen !== 3) {
+        const fadeStart = 0.10 // Stay invisible until 60% of the movement
+        const fadeEnd = 0.65   // Fully visible by 95%
+        targetModelOpacity = Math.max(0, Math.min(1, (rawProgress - fadeStart) / (fadeEnd - fadeStart)))
+      }
+    }
+
+    // Smooth out the calculated curve
+    animValues.current.modelOpacity = damp(animValues.current.modelOpacity, targetModelOpacity, 30, safeDelta)
+
+    materialsRef.current.forEach((mat) => {
+      // With the screen-door shader, we do NOT change opacity or transparent properties!
+      // This guarantees flawless depth sorting and completely eliminates x-ray effects.
+      if (mat.userData.shader) {
+        mat.userData.shader.uniforms.uFade.value = currentOpacity // Uses the single currentOpacity declaration from above
+      }
+    })
   })
 
   /* ── Only our invisible sentinel hit-zones trigger switch interaction ── */

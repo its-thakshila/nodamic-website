@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        // New xs band for large phones / phablets (480px).
+        // Keeps Tailwind defaults (sm:640, md:768, lg:1024, xl:1280, 2xl:1536) intact.
+        // Mirrors BREAKPOINTS.xs in hero.config.js — keep in sync.
+        'xs': '480px',
+      },
       fontFamily: {
         grotesk: ['"Space Grotesk"', 'sans-serif'],
         inter: ['"Inter"', 'sans-serif'],

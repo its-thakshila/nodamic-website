@@ -1,8 +1,7 @@
 import { useRef, useEffect, useMemo, memo } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { ContactShadows } from '@react-three/drei'
-import { STUDIO_LIGHTS } from '../../../config/hero.config'
+import { STUDIO_LIGHTS, DEBUG_FLAGS } from '../../../config/hero.config'
 import { useDiagnostic } from '../DiagnosticContext'
 import { useScrollState } from '../ScrollContext'
 
@@ -24,12 +23,10 @@ export default memo(function StudioLighting() {
     rimLight,
     overheadLight,
     hemisphereLight,
-    contactShadows,
   } = STUDIO_LIGHTS
 
   const diag = useDiagnostic()
   const enableLights = diag ? diag.enableLights : true
-  const enableContactShadows = diag ? diag.enableContactShadows : true
 
   const scrollState = useScrollState()
   const activeScreen = scrollState ? scrollState.activeScreen : 0
@@ -83,7 +80,7 @@ export default memo(function StudioLighting() {
 
   useFrame((state, delta) => {
     const safeDelta = Math.min(delta, 0.1)
-    
+
     if (overheadLightRef.current && overheadLight.screens) {
       const targetPos = overheadLight.screens[activeScreen]?.position || overheadLight.position
       const targetIntensity = overheadLight.screens[activeScreen]?.intensity ?? overheadLight.intensity
@@ -211,19 +208,6 @@ export default memo(function StudioLighting() {
             intensity={hemisphereLight.intensity}
           />
         </>
-      )}
-
-      {enableContactShadows && (
-        <ContactShadows
-        frames={1}
-        position={contactShadows.position}
-        opacity={contactShadows.opacity}
-        scale={contactShadows.scale}
-        blur={contactShadows.blur}
-        far={contactShadows.far}
-        color={contactShadows.color}
-        resolution={1024}
-      />
       )}
     </>
   )

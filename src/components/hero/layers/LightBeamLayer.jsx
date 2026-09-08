@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { LAYER_Z_INDEX } from '../../../config/hero.config'
 import { useViewportProgress } from '../../../hooks/useViewportProgress'
+import { useScrollState } from '../ScrollContext'
 
 /*
  * Layer 2 (z-20): LightBeamLayer
@@ -9,6 +10,9 @@ import { useViewportProgress } from '../../../hooks/useViewportProgress'
  */
 export default memo(function LightBeamLayer() {
   const { mobile, desktop } = useViewportProgress()
+  const scrollState = useScrollState()
+  const activeScreen = scrollState ? scrollState.activeScreen : 0
+  const isFaded = activeScreen >= 3
 
   // Interpolate tracking parameters
   // Because narrower screens are proportionally taller, the physical pixel vector from the top-right 
@@ -26,8 +30,8 @@ export default memo(function LightBeamLayer() {
 
   return (
     <div
-      className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none"
-      style={{ zIndex: LAYER_Z_INDEX.lightBeam, mixBlendMode: 'screen' }}
+      className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none transition-opacity duration-[1500ms] ease-in-out"
+      style={{ zIndex: LAYER_Z_INDEX.lightBeam, opacity: isFaded ? 0 : 1, mixBlendMode: 'screen' }}
       aria-hidden="true"
     >
       <div className="absolute -left-[10%] -top-[10%] w-[120%] h-[120%] pointer-events-none animate-beam-drift">

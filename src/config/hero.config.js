@@ -2,6 +2,21 @@ import * as THREE from 'three'
 
 const DEG = Math.PI / 180
 
+/* ─── Shared Breakpoint Tokens ───────────────────────────────────────────────
+ * Single source of truth for all numeric breakpoint values.
+ * Consumed by: useViewportProgress, Node1Model (isMobile), tailwind.config.js (xs).
+ * Mirrors the Tailwind screen config — keep in sync if screens change.
+ * ─────────────────────────────────────────────────────────────────────────── */
+export const BREAKPOINTS = {
+  xs: 480,   // Large phones / phablets  (xs: in Tailwind)
+  sm: 640,   // Small tablets / landscape phones (sm: in Tailwind)
+  md: 768,   // Tablet portrait start    (md: in Tailwind)
+  lg: 1024,   // Tablet landscape / layout switch (lg: in Tailwind)
+  xl: 1280,   // Desktop                 (xl: in Tailwind)
+  '2xl': 1440,  // Wide desktop            (2xl: in Tailwind)
+  '3xl': 1920,  // Ultra-wide / reference  (used by useViewportProgress)
+}
+
 /* ─── Layer Stacking Order & Z-Index Architecture ─────────────────────────── */
 export const LAYER_Z_INDEX = {
   background: 0,      // Layer 0 (z-0): Static monochrome radial foundation & vignette
@@ -25,6 +40,15 @@ export const DEBUG_FLAGS = {
   useHighResHDRI: false, // Toggles between 1k and 4k HDRI (fallback to 1k if 4k missing)
   useSplitGridLight: true, // Toggles between the 2x4 grid and a single large rect light
   forceFixedDPR: false, // Disables AdaptiveDpr and locks Canvas DPR to 2.0
+
+  // Manual Layer Toggles for visual debugging
+  showBackgroundLayer: true,
+  showNoiseLayer: true,
+  showLightBeamLayer: true,
+  showRadialGlowLayer: true,
+  showReflectionLayer: true,
+  showOverlayUI: true,
+  showForegroundGrainLayer: true,
 }
 
 /* ─── Animation Timing ─────────────────────────────────────────────────────── */
@@ -104,6 +128,19 @@ export const MODEL_CONFIG = {
           { width: 320, height: 568, offsetX: 0.14, offsetY: 0.08, scale: 0.84 }
         ]
       }
+    },
+    {
+      // Screen 3: The Particle Fade
+      position: [-5.0, -3.0, -1.5],
+      baseRotation: {
+        x: 1.2,
+        y: 0.38,
+        z: -0.9 - (Math.PI * 2),
+      },
+      mobileConfig: {
+        scale: { phase1Target: 0.0, minScale: 0.0, phase2Start: 1300 },
+        viewOffset: { maxOffsetX: 0, maxOffsetY: 0 }
+      }
     }
   ],
   mobileConfig: {
@@ -179,6 +216,14 @@ export const ENVIRONMENT_CONFIG = {
         y: 0.03,
         z: 0.80,
       }
+    },
+    {
+      // Screen 3: The Particle Fade
+      rotation: {
+        x: 0.17,
+        y: 0.03,
+        z: 0.80,
+      }
     }
   ]
 }
@@ -226,6 +271,7 @@ export const STUDIO_LIGHTS = {
     screens: [
       { position: [0.5, 7.0, 0.5], intensity: 10 },
       { position: [-0.5, 7.0, 0.5], intensity: 20 },
+      { position: [-1, 7.0, 0.5], intensity: 20 },
       { position: [-1, 7.0, 0.5], intensity: 20 }
     ]
   },
@@ -297,6 +343,7 @@ export const UI_CONTENT = {
   screens: [
     {
       layoutVariant: 'split',
+      subtitleSameSize: true,   // Renders headingTitle & headingSubtitle at identical size
       headingTitle: 'Unthink the',
       headingSubtitle: 'Ordinary.',
       ctaButtonText: 'SCROLL TO DISCOVER',
@@ -334,6 +381,13 @@ export const UI_CONTENT = {
         { title: 'Power Cut Detection', desc: 'Detect unexpected interruptions,\ninstantly.' },
         { title: 'Weather Alerts', desc: 'Stay ahead of changing\nweather conditions.' }
       ]
+    },
+    {
+      layoutVariant: 'team',
+      headingTitle: "Who's Behind It",
+      headingSubtitle: '',
+      ctaButtonText: '',
+      bodyParagraph: { desktop: '', tablet: '', mobile: '' },
     }
   ]
 }
