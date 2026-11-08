@@ -8,6 +8,7 @@ export function useScrollState() {
 
 export function ScrollProvider({ children, totalScreens = 2 }) {
   const [activeScreen, setActiveScreen] = useState(0)
+  const [direction, setDirection] = useState('down')
   const activeScreenRef = useRef(0)
   
   useEffect(() => {
@@ -19,15 +20,15 @@ export function ScrollProvider({ children, totalScreens = 2 }) {
     let currentDebounce = 800
     let touchStartY = 0
 
-    const processScroll = (direction) => {
+    const processScroll = (dir) => {
       const now = Date.now()
       if (now - lastTime < currentDebounce) return
       
       const current = activeScreenRef.current
       let next = current
       
-      if (direction === 'down' && current < totalScreens - 1) next = current + 1
-      if (direction === 'up' && current > 0) next = current - 1
+      if (dir === 'down' && current < totalScreens - 1) next = current + 1
+      if (dir === 'up' && current > 0) next = current - 1
       
       if (next !== current) {
         // Lock scrolling for the exact duration of the transition animation
@@ -37,6 +38,7 @@ export function ScrollProvider({ children, totalScreens = 2 }) {
           currentDebounce = 1000 // Standard snappy transition lock
         }
         
+        setDirection(dir)
         setActiveScreen(next)
         lastTime = now
       }
@@ -73,7 +75,7 @@ export function ScrollProvider({ children, totalScreens = 2 }) {
   }, [totalScreens])
 
   return (
-    <ScrollContext.Provider value={{ activeScreen, setActiveScreen }}>
+    <ScrollContext.Provider value={{ activeScreen, setActiveScreen, direction }}>
       {children}
     </ScrollContext.Provider>
   )

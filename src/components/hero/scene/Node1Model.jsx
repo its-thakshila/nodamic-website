@@ -799,8 +799,8 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       haloMaterialRef.current.visible = haloMaterialRef.current.opacity > 0.005
     }
 
-    // 3. Cinematic Fade Logic for Screen 3
-    let targetModelOpacity = activeScreen === 3 ? 0.0 : 1.0
+    // 3. Cinematic Fade Logic for Screens 3 & 4 (Who's Behind It & Our Stories)
+    let targetModelOpacity = activeScreen >= 3 ? 0.0 : 1.0
     const trans = screenTransitionRef.current
 
     // Explicitly map the opacity to the transition progress timeline
@@ -808,16 +808,16 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       const elapsed = state.clock.elapsedTime - trans.startTime
       const rawProgress = Math.max(0, Math.min(1, elapsed / trans.duration))
 
-      // Fading OUT (Scrolling TO Screen 3)
-      if (activeScreen === 3) {
-        const fadeStart = 0.30 // Start fading out at 60% of the movement
-        const fadeEnd = 0.45   // Completely invisible by 95%
+      // Fading OUT (Scrolling TO Screen 3 or beyond)
+      if (activeScreen >= 3 && trans.fromScreen < 3) {
+        const fadeStart = 0.30
+        const fadeEnd = 0.45
         targetModelOpacity = 1.0 - Math.max(0, Math.min(1, (rawProgress - fadeStart) / (fadeEnd - fadeStart)))
       }
-      // Fading IN (Scrolling FROM Screen 3 back to Screen 2)
-      else if (trans.fromScreen === 3 && activeScreen !== 3) {
-        const fadeStart = 0.10 // Stay invisible until 60% of the movement
-        const fadeEnd = 0.65   // Fully visible by 95%
+      // Fading IN (Scrolling back to Screen 2)
+      else if (trans.fromScreen >= 3 && activeScreen < 3) {
+        const fadeStart = 0.10
+        const fadeEnd = 0.65
         targetModelOpacity = Math.max(0, Math.min(1, (rawProgress - fadeStart) / (fadeEnd - fadeStart)))
       }
     }

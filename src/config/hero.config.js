@@ -2,11 +2,11 @@ import * as THREE from 'three'
 
 const DEG = Math.PI / 180
 
-/* ─── Shared Breakpoint Tokens ───────────────────────────────────────────────
+/* --- Shared Breakpoint Tokens -------------------------------------------
  * Single source of truth for all numeric breakpoint values.
  * Consumed by: useViewportProgress, Node1Model (isMobile), tailwind.config.js (xs).
- * Mirrors the Tailwind screen config — keep in sync if screens change.
- * ─────────────────────────────────────────────────────────────────────────── */
+ * Mirrors the Tailwind screen config - keep in sync if screens change.
+ * ------------------------------------------------------------------------- */
 export const BREAKPOINTS = {
   xs: 480,   // Large phones / phablets  (xs: in Tailwind)
   sm: 640,   // Small tablets / landscape phones (sm: in Tailwind)
@@ -17,7 +17,7 @@ export const BREAKPOINTS = {
   '3xl': 1920,  // Ultra-wide / reference  (used by useViewportProgress)
 }
 
-/* ─── Layer Stacking Order & Z-Index Architecture ─────────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const LAYER_Z_INDEX = {
   background: 0,      // Layer 0 (z-0): Static monochrome radial foundation & vignette
   noise: 10,          // Layer 1 (z-10): Subtle base procedural texture grain
@@ -29,7 +29,7 @@ export const LAYER_Z_INDEX = {
   foregroundGrain: 70 // Layer 7 (z-70): Unifying film grain composition texture
 }
 
-/* ─── Debug & Feature Flags for Rendering Isolation ──────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const DEBUG_FLAGS = {
   toneMapping: 'ACESFilmic', // 'ACESFilmic' or 'AgX'
   enableVignette: true,
@@ -51,7 +51,7 @@ export const DEBUG_FLAGS = {
   showForegroundGrainLayer: true,
 }
 
-/* ─── Animation Timing ─────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const ANIMATION_TIMING = {
   introDelay: 0.4,    // Animation waits for the browser to stabilize and loading screen to fade
   textDelay: 0.8,     // Typography fades in as the model builds momentum
@@ -59,7 +59,7 @@ export const ANIMATION_TIMING = {
   duration: 1.5,      // Unified duration for the animations themselves
 }
 
-/* ─── Model Configuration ────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const MODEL_CONFIG = {
   debugResponsive: false, // Enables the Leva interactive keyframe recording UI
   path: import.meta.env.BASE_URL + 'models/Node1.glb',
@@ -130,7 +130,20 @@ export const MODEL_CONFIG = {
       }
     },
     {
-      // Screen 3: The Particle Fade
+      // Screen 3: Our Stories (Model drops & fades out)
+      position: [-5.0, -3.0, -1.5],
+      baseRotation: {
+        x: 1.2,
+        y: 0.38,
+        z: -0.9 - (Math.PI * 2),
+      },
+      mobileConfig: {
+        scale: { phase1Target: 0.0, minScale: 0.0, phase2Start: 1300 },
+        viewOffset: { maxOffsetX: 0, maxOffsetY: 0 }
+      }
+    },
+    {
+      // Screen 4: Who's Behind It (Model remains faded out)
       position: [-5.0, -3.0, -1.5],
       baseRotation: {
         x: 1.2,
@@ -177,7 +190,7 @@ export const MODEL_CONFIG = {
 
 
 
-/* ─── HDRI & Environment Configuration ───────────────────────────────────── */
+/* ------------------------------------------------------------------------- */
 const BLENDER_HDRI = {
   x: 0 * DEG,
   y: 0 * DEG,
@@ -218,7 +231,15 @@ export const ENVIRONMENT_CONFIG = {
       }
     },
     {
-      // Screen 3: The Particle Fade
+      // Screen 3: Our Stories
+      rotation: {
+        x: 0.17,
+        y: 0.03,
+        z: 0.80,
+      }
+    },
+    {
+      // Screen 4: Who's Behind It (Model remains faded out)
       rotation: {
         x: 0.17,
         y: 0.03,
@@ -228,7 +249,7 @@ export const ENVIRONMENT_CONFIG = {
   ]
 }
 
-/* ─── Complete Studio Photography Lighting Setup ─────────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const STUDIO_LIGHTS = {
   /*
    * LOCALIZED RECESSED SOCKET FILL LIGHT:
@@ -272,6 +293,7 @@ export const STUDIO_LIGHTS = {
       { position: [0.5, 7.0, 0.5], intensity: 10 },
       { position: [-0.5, 7.0, 0.5], intensity: 20 },
       { position: [-1, 7.0, 0.5], intensity: 20 },
+      { position: [-1, 7.0, 0.5], intensity: 20 },
       { position: [-1, 7.0, 0.5], intensity: 20 }
     ]
   },
@@ -291,7 +313,7 @@ export const STUDIO_LIGHTS = {
   },
 }
 
-/* ─── Camera & Rendering Configuration ───────────────────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const CAMERA_CONFIG = {
   position: [0, 0.1, 6.2],
   fov: 30,
@@ -311,7 +333,7 @@ export const GL_CONFIG = {
   alpha: true,
 }
 
-/* ─── Post-Processing Configuration ──────────────────────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const POST_PROCESSING_CONFIG = {
   bloom: {
     intensity: 0.78,
@@ -338,7 +360,7 @@ export const POST_PROCESSING_CONFIG = {
   },
 }
 
-/* ─── UI & Typography Content ────────────────────────────────────────────── */
+/* ------------------------------------------------------------------------- */
 export const UI_CONTENT = {
   screens: [
     {
@@ -381,6 +403,17 @@ export const UI_CONTENT = {
         { title: 'Power Cut Detection', desc: 'Detect unexpected interruptions,\ninstantly.' },
         { title: 'Weather Alerts', desc: 'Stay ahead of changing\nweather conditions.' }
       ]
+    },
+    {
+      layoutVariant: 'stories',
+      headingTitle: 'Our Stories',
+      headingSubtitle: '',
+      ctaButtonText: '',
+      bodyParagraph: {
+        desktop: "Builds, experiments and things we've learned along the way.",
+        tablet: "Builds, experiments and things we've learned along the way.",
+        mobile: "Builds, experiments and things we've learned along the way.",
+      }
     },
     {
       layoutVariant: 'team',

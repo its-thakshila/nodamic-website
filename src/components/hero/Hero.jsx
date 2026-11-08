@@ -35,7 +35,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <ScrollProvider totalScreens={4}>
+    <ScrollProvider totalScreens={5}>
       {MODEL_CONFIG.debugResponsive && <ResponsiveDebugger />}
       <section className="relative w-full h-[100svh] lg:h-screen overflow-hidden bg-[#0a0a0a] isolate">
         {/* Layer 0 (z-0): Dark monochrome radial gradients & perimeter vignette */}

@@ -10,22 +10,30 @@ const fadeUp = {
     transition: {
       duration: ANIMATION_TIMING.duration,
       ease: [0.16, 1, 0.3, 1],
-      delay: ANIMATION_TIMING.textDelay + i * 0.12,
+      delay: i * 0.1, // Fast immediate start without 0.8s empty screen wait
     },
   }),
-  exit: { opacity: 0, transition: { duration: 0.3 } },
+  exit: (i) => ({
+    opacity: 0,
+    y: 28,
+    transition: {
+      duration: 0.3,
+      ease: [0.7, 0, 0.84, 0],
+      delay: i * 0.04, // Smooth cascading reverse exit
+    },
+  }),
 }
 
 const TEAM = [
   {
-    name: 'Sithum Vitharana',
-    role: 'Co-Founder | Electronics Engineer',
-    photo: `${import.meta.env.BASE_URL}team/sithum.png`,
-  },
-  {
     name: 'Thakshila Bandara',
     role: 'Founder | Firmware Engineer',
     photo: `${import.meta.env.BASE_URL}team/thakshila.png`,
+  },
+  {
+    name: 'Sithum Vitharana',
+    role: 'Co-Founder | Electronics Engineer',
+    photo: `${import.meta.env.BASE_URL}team/sithum.png`,
   },
   {
     name: 'Anupama Dewpura',

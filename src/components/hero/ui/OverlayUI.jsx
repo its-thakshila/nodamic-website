@@ -4,6 +4,7 @@ import { SquareChevronDownIcon } from './SquareChevronDownIcon'
 import { GitHubIcon } from './GitHubIcon'
 import Header from './Header'
 import TeamScreen from './TeamScreen'
+import StoriesScreen from './StoriesScreen'
 import { UI_CONTENT, LAYER_Z_INDEX, ANIMATION_TIMING } from '../../../config/hero.config'
 import { useScrollState } from '../ScrollContext'
 
@@ -75,19 +76,21 @@ export default memo(function OverlayUI({ isLoaded = false }) {
           <motion.div
             key={animationKey}
             className={`flex-1 flex flex-col lg:col-span-12 relative z-40 w-full ${
-              screenContent.layoutVariant === 'team'
+              screenContent.layoutVariant === 'team' || screenContent.layoutVariant === 'stories'
                 ? 'lg:row-start-2 lg:row-span-2 lg:items-start lg:justify-start'
                 : screenContent.layoutVariant === 'split-features'
                   ? 'lg:justify-end lg:gap-0 lg:grid lg:grid-cols-12 lg:gap-x-[clamp(2rem,3.1vw,3rem)] lg:row-start-2 lg:content-center lg:pb-[clamp(9rem,16svh,12rem)] min-[1300px]:pb-0 [@media(max-height:600px)]:!pb-0'
                   : 'lg:justify-end lg:gap-0 lg:grid lg:grid-cols-12 lg:gap-x-[clamp(2rem,3.1vw,3rem)] lg:row-start-3 lg:items-end lg:pb-[clamp(3.3rem,5.2vw,5rem)]'
-            } ${(screenContent.layoutVariant === 'stacked-left' || screenContent.layoutVariant === 'team') ? 'justify-center' : 'justify-between'}`}
+            } ${(screenContent.layoutVariant === 'stacked-left' || screenContent.layoutVariant === 'team' || screenContent.layoutVariant === 'stories') ? 'justify-center' : 'justify-between'}`}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
-            {/* Team Screen: completely bypasses the standard layout for the 'team' variant */}
+            {/* Team & Stories Screens: completely bypass the standard layout */}
             {screenContent.layoutVariant === 'team' ? (
               <TeamScreen />
+            ) : screenContent.layoutVariant === 'stories' ? (
+              <StoriesScreen bodyParagraph={screenContent.bodyParagraph} />
             ) : (
             <>
             {/* Product Placeholder for Mobile Flexbox Composition (absorbs extra vertical space) */}

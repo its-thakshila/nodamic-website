@@ -29,5 +29,16 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    // Hide scrollbars while preserving scroll behaviour (used by StoriesScreen card row)
+    function ({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        },
+      })
+    },
+  ],
 }
