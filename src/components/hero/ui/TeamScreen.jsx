@@ -1,6 +1,8 @@
 import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { ANIMATION_TIMING } from '../../../config/hero.config'
+import { LinkedInIcon } from './LinkedInIcon'
+import { GitHubIcon } from './GitHubIcon'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
@@ -29,16 +31,22 @@ const TEAM = [
     name: 'Thakshila Bandara',
     role: 'Founder | Firmware Engineer',
     photo: `${import.meta.env.BASE_URL}team/thakshila.png`,
+    linkedin: 'https://www.linkedin.com/in/its-thakshila/',
+    github: 'https://github.com/its-thakshila',
   },
   {
     name: 'Sithum Vitharana',
     role: 'Co-Founder | Electronics Engineer',
     photo: `${import.meta.env.BASE_URL}team/sithum.png`,
+    linkedin: 'https://www.linkedin.com/in/sithum-vitharana/',
+    github: 'https://github.com/SSW6421',
   },
   {
     name: 'Anupama Dewpura',
     role: 'Co-Founder | Mechanical Engineer',
     photo: `${import.meta.env.BASE_URL}team/anupama.png`,
+    linkedin: 'https://www.linkedin.com/in/anupamadewpura/',
+    github: 'https://github.com/AnupamaDewpura',
   },
 ]
 
@@ -64,7 +72,7 @@ function PortraitCard({ member, i, imgHeight }) {
           decoding="async"
         />
       </div>
-      <div className="mt-[0.5em] text-center">
+      <div className="mt-[0.5em] text-center flex flex-col items-center">
         <p
           className="font-outfit text-white font-[500] leading-snug"
           style={{ fontSize: 'min(clamp(0.9rem,3.8vw,1.15rem),2.4svh)', letterSpacing: '-0.01em' }}
@@ -77,6 +85,32 @@ function PortraitCard({ member, i, imgHeight }) {
         >
           {member.role}
         </p>
+
+        {/* Social Links */}
+        <div className="flex items-center justify-center gap-3.5 mt-2.5 pointer-events-auto">
+          {member.linkedin && (
+            <a
+              href={member.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${member.name}'s LinkedIn profile`}
+              className="text-white/60 hover:text-white hover:scale-110 transition-all duration-300 p-1"
+            >
+              <LinkedInIcon size={19} />
+            </a>
+          )}
+          {member.github && (
+            <a
+              href={member.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${member.name}'s GitHub profile`}
+              className="text-white/60 hover:text-white hover:scale-110 transition-all duration-300 p-1"
+            >
+              <GitHubIcon size={19} />
+            </a>
+          )}
+        </div>
       </div>
     </motion.div>
   )
@@ -84,7 +118,7 @@ function PortraitCard({ member, i, imgHeight }) {
 
 /*
  * TeamScreen
- * Renders the "Who's Behind It" layout for Screen 3.
+ * Renders the "Who's Behind It" layout for Screen 4.
  * Layout strategy:
  *   - Landscape / desktop: horizontal row of 3 cards
  *   - Portrait mobile  (< 640px): single vertical column, image height capped by svh
@@ -130,13 +164,39 @@ export default memo(function TeamScreen() {
             <div className="w-full max-w-[220px] sm:max-w-[260px] md:max-w-[300px] lg:max-w-[340px] xl:max-w-[380px] overflow-hidden flex items-end justify-center">
               <img src={member.photo} alt={member.name} className="w-full h-auto object-contain object-bottom" draggable={false} loading="eager" decoding="async" />
             </div>
-            <div className="mt-3 lg:mt-5 text-center">
+            <div className="mt-3 lg:mt-5 text-center flex flex-col items-center">
               <p className="font-outfit text-white text-[min(clamp(1.05rem,4.5vw,1.2rem),2.5svh)] sm:text-[1.15rem] md:text-[1.25rem] lg:text-[clamp(1.25rem,2vw,1.6rem)] font-[500] leading-snug" style={{ letterSpacing: '-0.01em' }}>
                 {member.name}
               </p>
               <p className="font-outfit text-white/55 text-[min(clamp(0.75rem,3.5vw,0.85rem),1.8svh)] sm:text-[0.85rem] md:text-[0.9rem] lg:text-[clamp(0.85rem,1.15vw,1.1rem)] font-[300] leading-snug mt-0.5">
                 {member.role}
               </p>
+
+              {/* Social Links */}
+              <div className="flex items-center justify-center gap-4 mt-3.5 pointer-events-auto">
+                {member.linkedin && (
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${member.name}'s LinkedIn profile`}
+                    className="text-white/60 hover:text-white hover:scale-110 transition-all duration-300 p-1"
+                  >
+                    <LinkedInIcon size={24} />
+                  </a>
+                )}
+                {member.github && (
+                  <a
+                    href={member.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${member.name}'s GitHub profile`}
+                    className="text-white/60 hover:text-white hover:scale-110 transition-all duration-300 p-1"
+                  >
+                    <GitHubIcon size={24} />
+                  </a>
+                )}
+              </div>
             </div>
           </motion.div>
         ))}
