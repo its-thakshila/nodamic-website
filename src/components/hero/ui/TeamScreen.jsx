@@ -60,6 +60,8 @@ function PortraitCard({ member, i, imgHeight }) {
           alt={member.name}
           className="max-w-full max-h-full object-contain object-bottom"
           draggable={false}
+          loading="eager"
+          decoding="async"
         />
       </div>
       <div className="mt-[0.5em] text-center">
@@ -126,7 +128,7 @@ export default memo(function TeamScreen() {
             className="flex flex-col items-center flex-1 min-w-0"
           >
             <div className="w-full max-w-[220px] sm:max-w-[260px] md:max-w-[300px] lg:max-w-[340px] xl:max-w-[380px] overflow-hidden flex items-end justify-center">
-              <img src={member.photo} alt={member.name} className="w-full h-auto object-contain object-bottom" draggable={false} />
+              <img src={member.photo} alt={member.name} className="w-full h-auto object-contain object-bottom" draggable={false} loading="eager" decoding="async" />
             </div>
             <div className="mt-3 lg:mt-5 text-center">
               <p className="font-outfit text-white text-[min(clamp(1.05rem,4.5vw,1.2rem),2.5svh)] sm:text-[1.15rem] md:text-[1.25rem] lg:text-[clamp(1.25rem,2vw,1.6rem)] font-[500] leading-snug" style={{ letterSpacing: '-0.01em' }}>

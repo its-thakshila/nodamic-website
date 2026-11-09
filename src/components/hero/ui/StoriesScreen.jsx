@@ -85,6 +85,8 @@ function PostCard({ post }) {
             alt={post.title || 'Story'}
             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             draggable={false}
+            loading="eager"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/[0.03]" />
