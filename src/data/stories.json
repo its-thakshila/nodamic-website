@@ -2,41 +2,33 @@
   {
     "id": "post-1",
     "title": "We Kept Building!",
-    "excerpt": "After showcasing Node 1 at EngEx 2025, we didn't stop working on it. We went back to the hardware...",
+    "excerpt": "After showcasing Node 1 at EngEx 2025, we didn't stop working on it. We went back to the hardware and started refining the physical product itself.",
     "image": "/stories/post1.jpg",
-    "url": "https://www.linkedin.com/company/nodamic",
-    "date": "2025-06-01"
+    "url": "https://lnkd.in/p/gFDdf3_J",
+    "date": "2026-08-17"
   },
   {
     "id": "post-2",
     "title": "We Refined it!",
-    "excerpt": "After showcasing Node 1 at EngEx 2025, we didn't stop working on it. We went back to the hardware...",
+    "excerpt": "One of the things we learned from building Node 1 is that a functional prototype and a finished-looking piece of hardware are two very different things.",
     "image": "/stories/post2.jpg",
-    "url": "https://www.linkedin.com/company/nodamic",
-    "date": "2025-06-15"
+    "url": "https://lnkd.in/p/gJmRsaJm",
+    "date": "2026-08-19"
   },
   {
     "id": "post-3",
     "title": "Built to Connect!",
-    "excerpt": "After showcasing Node 1 at EngEx 2025, we didn't stop working on it. We went back to the hardware...",
+    "excerpt": "Building connected hardware means thinking beyond the physical device. Node 1 wasn't designed to exist on its own. Alongside the hardware, we developed a web-based interface to interact with the device and make its data accessible through a digital layer.",
     "image": "/stories/post3.jpg",
-    "url": "https://www.linkedin.com/company/nodamic",
-    "date": "2025-07-01"
+    "url": "https://lnkd.in/p/g5X7uBT8",
+    "date": "2026-08-22"
   },
   {
     "id": "post-4",
     "title": "Designed from Scratch!",
-    "excerpt": "After showcasing Node 1 at EngEx 2025, we didn't stop working on it. We went back to the hardware...",
+    "excerpt": "One of the biggest steps in taking Node 1 from an experimental prototype toward a more refined hardware build was designing a custom PCB.",
     "image": "/stories/post4.jpg",
-    "url": "https://www.linkedin.com/company/nodamic",
-    "date": "2025-07-20"
-  },
-  {
-    "id": "post-3",
-    "title": "Built to Connect!",
-    "excerpt": "After showcasing Node 1 at EngEx 2025, we didn't stop working on it. We went back to the hardware...",
-    "image": "/stories/post3.jpg",
-    "url": "https://www.linkedin.com/company/nodamic",
-    "date": "2025-07-01"
+    "url": "https://lnkd.in/p/gXy9HfeC",
+    "date": "2026-08-25"
   }
 ]

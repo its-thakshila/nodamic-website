@@ -104,8 +104,14 @@ function PostCard({ post }) {
             lg:text-[clamp(0.95rem,1.3vw,1.25rem)]
             line-clamp-3
           "
+          style={{
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
         >
-          {post.excerpt}
+          {post.excerpt?.replace(/\.{3,}$/, '')}
         </p>
       </div>
     </a>
@@ -253,8 +259,8 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
           className={`
             w-full flex flex-row items-stretch
             pb-3
-            ${canFitAll 
-              ? 'justify-center overflow-x-hidden' 
+            ${canFitAll
+              ? 'justify-center overflow-x-hidden'
               : 'justify-start overflow-x-auto scrollbar-hide'
             }
           `}
