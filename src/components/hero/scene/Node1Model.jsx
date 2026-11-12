@@ -200,14 +200,14 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       shader.uniforms.uFade = { value: 1.0 }
 
       const bayerFunction = `
-        uniform float uFade;
-        float bayerDither8x8(vec2 p) {
-          vec2 P1 = mod(p, 2.0);
-          vec2 P2 = mod(floor(0.5 * p), 2.0);
-          vec2 P3 = mod(floor(0.25 * p), 2.0);
-          float b2_1 = mod(3.0 * P1.y + 2.0 * P1.x, 4.0);
-          float b2_2 = mod(3.0 * P2.y + 2.0 * P2.x, 4.0);
-          float b2_3 = mod(3.0 * P3.y + 2.0 * P3.x, 4.0);
+        uniform highp float uFade;
+        highp float bayerDither8x8(highp vec2 p) {
+          highp vec2 P1 = mod(p, 2.0);
+          highp vec2 P2 = mod(floor(0.5 * p), 2.0);
+          highp vec2 P3 = mod(floor(0.25 * p), 2.0);
+          highp float b2_1 = mod(3.0 * P1.y + 2.0 * P1.x, 4.0);
+          highp float b2_2 = mod(3.0 * P2.y + 2.0 * P2.x, 4.0);
+          highp float b2_3 = mod(3.0 * P3.y + 2.0 * P3.x, 4.0);
           return (16.0 * b2_1 + 4.0 * b2_2 + b2_3) / 64.0;
         }
       `
@@ -218,7 +218,7 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
         `
         #include <dithering_fragment>
         if (uFade < 0.999) {
-          float bayer = bayerDither8x8(floor(gl_FragCoord.xy));
+          highp float bayer = bayerDither8x8(floor(gl_FragCoord.xy));
           if (uFade <= bayer) discard;
         }
         `
@@ -402,11 +402,19 @@ export default memo(function Node1Model({ startAnimations, onModelReady }) {
       }
     })
 
-    // Compile shaders and materials synchronously before first render
-    console.log('[DEBUG] Node1Model.jsx: Entering gl.compile()')
+    // Compile shaders and materials before first render.
+    // On Safari/WebKit, gl.compile() with complex onBeforeCompile shaders can
+    // freeze the main thread, so we wrap it safely and skip on failure.
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    console.log('[DEBUG] Node1Model.jsx: Entering gl.compile(), isSafari:', isSafari)
     try {
-      gl.compile(scene, camera)
-      console.log('[DEBUG] Node1Model.jsx: gl.compile() completed successfully.')
+      if (!isSafari) {
+        // On non-Safari browsers, pre-compile to eliminate first-frame jank
+        gl.compile(scene, camera)
+        console.log('[DEBUG] Node1Model.jsx: gl.compile() completed successfully.')
+      } else {
+        console.log('[DEBUG] Node1Model.jsx: Skipping gl.compile() on Safari to prevent freeze.')
+      }
     } catch (error) {
       console.error('[DEBUG] Node1Model.jsx: gl.compile() threw an exception:', error)
     }

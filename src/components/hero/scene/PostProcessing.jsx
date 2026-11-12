@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import * as THREE from 'three'
 import {
   EffectComposer,
@@ -13,6 +13,17 @@ import { BlendFunction } from 'postprocessing'
 import { POST_PROCESSING_CONFIG, DEBUG_FLAGS } from '../../../config/hero.config'
 import { useDiagnostic } from '../DiagnosticContext'
 
+// Safari's Metal-backed WebGL has issues with HalfFloatType framebuffers under
+// heavy multi-pass post-processing. Use UnsignedByteType on Safari to prevent
+// silent WebGL context loss that causes the loading screen to hang forever.
+const getFrameBufferType = () => {
+  if (typeof navigator === 'undefined') return THREE.HalfFloatType
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+  return isSafari ? THREE.UnsignedByteType : THREE.HalfFloatType
+}
+
+const FRAME_BUFFER_TYPE = getFrameBufferType()
+
 export default memo(function PostProcessing() {
   const { bloom, colorGrade, vignette, noise } = POST_PROCESSING_CONFIG
   const diag = useDiagnostic()
@@ -23,7 +34,7 @@ export default memo(function PostProcessing() {
     <EffectComposer
       multisampling={0}
       disableNormalPass={true}
-      frameBufferType={THREE.HalfFloatType}
+      frameBufferType={FRAME_BUFFER_TYPE}
       dithering={false}
     >
       {/*

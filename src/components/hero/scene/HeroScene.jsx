@@ -1,4 +1,4 @@
-import { Suspense, useEffect, lazy, memo } from 'react'
+import { Suspense, useEffect, useRef, lazy, memo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Environment, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
@@ -59,6 +59,27 @@ function EnvRotation({ diagHdriRotation }) {
 
 /* ── Loading fallback (invisible during initial asset fetching) ──────────── */
 function LoadingFallback() {
+  return null
+}
+
+/* ── WebGL Context Loss Sentinel ── */
+/* Safari on iOS aggressively kills WebGL contexts under memory pressure.
+   If the context is lost, we fire onModelReady so the loading screen can
+   still dismiss rather than hanging forever. */
+function ContextLossHandler({ onModelReady }) {
+  const { gl } = useThree()
+
+  useEffect(() => {
+    const canvas = gl.domElement
+    const handleLoss = (e) => {
+      e.preventDefault()
+      console.error('[WebGL] Context lost on Safari/iOS — forcing model ready to dismiss loading screen.')
+      if (onModelReady) onModelReady()
+    }
+    canvas.addEventListener('webglcontextlost', handleLoss, false)
+    return () => canvas.removeEventListener('webglcontextlost', handleLoss)
+  }, [gl, onModelReady])
+
   return null
 }
 
@@ -158,6 +179,8 @@ export default memo(function HeroScene({ startAnimations, onModelReady }) {
         style={{ background: 'transparent' }}
       >
         {diag?.showPerf && <Perf position="top-left" />}
+        {/* Detect WebGL context loss (Safari/iOS) and unblock loading screen */}
+        <ContextLossHandler onModelReady={onModelReady} />
         {/* Blender-matched HDRI orientation with smooth scroll interpolation */}
         <EnvRotation diagHdriRotation={diag?.hdriRotation} />
 

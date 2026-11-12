@@ -46,11 +46,14 @@ export default memo(function LoadingScreen({ onReady, isModelRendered }) {
   }, [fading])
 
   // Main loading completion logic
+  // document.fonts.ready can hang forever on iOS Safari in certain conditions,
+  // so we race it against a timeout to guarantee the loading screen always dismisses.
   useEffect(() => {
     let isMounted = true
 
     if (progress === 100 && !active && isModelRendered && !fading && !hidden) {
-      document.fonts.ready.then(() => {
+      const fontTimeout = new Promise((resolve) => setTimeout(resolve, 3000))
+      Promise.race([document.fonts.ready, fontTimeout]).then(() => {
         if (!isMounted) return
         onReady()
         setFading(true)

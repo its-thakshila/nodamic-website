@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import BackgroundLayer from './layers/BackgroundLayer'
 import NoiseLayer from './layers/NoiseLayer'
 import LightBeamLayer from './layers/LightBeamLayer'
@@ -23,6 +23,7 @@ import ResponsiveDebugger from './debug/ResponsiveDebugger'
 export default function Hero() {
   const [isSceneReady, setIsSceneReady] = useState(false)
   const [isModelRendered, setIsModelRendered] = useState(false)
+  const safariTimeoutRef = useRef(null)
 
   const handleSceneReady = useCallback(() => {
     console.log('[DEBUG] Hero.jsx: handleSceneReady called. isSceneReady becoming true.')
@@ -33,6 +34,18 @@ export default function Hero() {
     console.log('[DEBUG] Hero.jsx: handleModelReady called. isModelRendered becoming true.')
     setIsModelRendered(true)
   }, [])
+
+  // Safety net: if isModelRendered never fires (e.g., Safari WebGL context crash),
+  // force-dismiss the loading screen after 12 seconds so users aren't stuck forever.
+  useEffect(() => {
+    safariTimeoutRef.current = setTimeout(() => {
+      if (!isModelRendered) {
+        console.warn('[DEBUG] Hero.jsx: Safety timeout — forcing isModelRendered after 12s.')
+        setIsModelRendered(true)
+      }
+    }, 12000)
+    return () => clearTimeout(safariTimeoutRef.current)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <ScrollProvider totalScreens={5}>
