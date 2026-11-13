@@ -60,14 +60,24 @@ const getVariants = (isScrollingUp) => {
 }
 
 /* ─── Post Card ──────────────────────────────────────────────────────────── */
-function PostCard({ post }) {
+function PostCard({ post, isDraggingRef }) {
+  const handleClick = (e) => {
+    // If the user swiped to slide the cards, prevent following the link
+    if (isDraggingRef?.current) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
   return (
     <a
       href={post.url}
       target="_blank"
       rel="noopener noreferrer"
+      draggable={false}
+      onClick={handleClick}
       className="
-        group relative flex flex-col w-full h-full pointer-events-auto
+        group relative flex flex-col w-full h-full pointer-events-auto select-none
         rounded-2xl overflow-hidden
         bg-white/[0.04]
         hover:bg-white/[0.07]
@@ -75,7 +85,12 @@ function PostCard({ post }) {
         hover:-translate-y-1
         cursor-pointer
       "
-      style={{ WebkitTapHighlightColor: 'transparent' }}
+      style={{
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'pan-x',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+      }}
     >
       {/* Image area: Square ratio (aspect-square) */}
       <div className="relative w-full aspect-square overflow-hidden bg-white/5 shrink-0">
@@ -310,12 +325,98 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
     }, 150)
   }, [canFitAll, visibleCount])
 
-  const handleTouchStart = () => {
+  const touchStartPos = useRef({ x: 0, y: 0, time: 0 })
+  const isDraggingRef = useRef(false)
+  const isSwipingTouchRef = useRef(false)
+
+  const handleTouchStart = (e) => {
     setIsPaused(true)
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+    if (e.touches && e.touches[0]) {
+      touchStartPos.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      }
+    }
+    isDraggingRef.current = false
+    isSwipingTouchRef.current = false
   }
 
-  const handleTouchEnd = () => {
+  const handleTouchMove = (e) => {
+    if (!e.touches || !e.touches[0]) return
+    const dx = e.touches[0].clientX - touchStartPos.current.x
+    const dy = e.touches[0].clientY - touchStartPos.current.y
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+      isDraggingRef.current = true
+    }
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      isSwipingTouchRef.current = true
+    }
+  }
+
+  const handleTouchEnd = (e) => {
+    if (canFitAll) {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+      resumeTimerRef.current = setTimeout(() => setIsPaused(false), 3000)
+      setTimeout(() => { isDraggingRef.current = false }, 100)
+      return
+    }
+
+    const touch = e.changedTouches ? e.changedTouches[0] : null
+    if (touch && isSwipingTouchRef.current) {
+      const dx = touch.clientX - touchStartPos.current.x
+      const track = trackRef.current
+      if (track) {
+        const firstChild = track.children[0]
+        if (firstChild) {
+          const style = window.getComputedStyle(track)
+          const gap = parseFloat(style.gap) || 16
+          const cardWidth = firstChild.getBoundingClientRect().width
+          const step = cardWidth + gap
+          const trackWidth = track.clientWidth
+
+          const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
+          const sideMargin = (trackWidth - visibleSpanWidth) / 2
+
+          // If swiped left by > 30px -> slide to next card
+          // If swiped right by > 30px -> slide to previous card
+          let targetIndex = currentIndexRef.current
+          if (dx < -30) {
+            targetIndex = currentIndexRef.current + 1
+          } else if (dx > 30) {
+            targetIndex = currentIndexRef.current - 1
+          }
+
+          const targetScroll = (targetIndex * step) - sideMargin
+          track.scrollTo({ left: targetScroll, behavior: 'smooth' })
+          currentIndexRef.current = targetIndex
+
+          // Silent wrap after smooth scroll animation settles
+          setTimeout(() => {
+            if (!trackRef.current) return
+            if (currentIndexRef.current >= posts.length * 2) {
+              const wrapIndex = currentIndexRef.current - posts.length
+              const wrapScroll = (wrapIndex * step) - sideMargin
+              trackRef.current.scrollTo({ left: wrapScroll, behavior: 'instant' })
+              currentIndexRef.current = wrapIndex
+            } else if (currentIndexRef.current < posts.length) {
+              const wrapIndex = currentIndexRef.current + posts.length
+              const wrapScroll = (wrapIndex * step) - sideMargin
+              trackRef.current.scrollTo({ left: wrapScroll, behavior: 'instant' })
+              currentIndexRef.current = wrapIndex
+            }
+          }, 650)
+        }
+      }
+    }
+
+    // Keep dragging flag for 150ms so onClick on <a> does not fire when swiping
+    setTimeout(() => {
+      isDraggingRef.current = false
+      isSwipingTouchRef.current = false
+    }, 150)
+
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
     resumeTimerRef.current = setTimeout(() => setIsPaused(false), 3000)
   }
@@ -385,19 +486,20 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
 
       {/* ── Dynamic Card Container / Circular Slider (edge-to-edge when overflowing) ── */}
       <div
-        className={`w-full flex justify-center ${
+        className={`w-full flex justify-center pointer-events-auto touch-pan-x select-none ${
           canFitAll ? 'max-w-[1320px] px-6 sm:px-12 md:px-16' : 'px-0 max-w-none'
         }`}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
           ref={trackRef}
           onScroll={handleScroll}
           className={`
-            w-full flex flex-row items-stretch
+            w-full flex flex-row items-stretch pointer-events-auto touch-pan-x select-none
             pb-3
             ${canFitAll
               ? 'justify-center overflow-x-hidden'
@@ -408,6 +510,7 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
             gap: `${gapPx}px`,
             scrollSnapType: canFitAll ? 'none' : (visibleCount === 1 ? 'x mandatory' : 'none'),
             WebkitOverflowScrolling: 'touch',
+            touchAction: canFitAll ? 'auto' : 'pan-x',
           }}
         >
           {displayPosts.map((post, i) => (
@@ -415,13 +518,13 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
               key={`${post.id}-${i}`}
               custom={i}
               variants={cardVariants}
-              className="shrink-0 h-full flex flex-col"
+              className="shrink-0 h-full flex flex-col pointer-events-auto select-none"
               style={{
                 width: cardWidthStyle,
                 scrollSnapAlign: canFitAll ? 'none' : (visibleCount === 1 ? 'center' : 'none'),
               }}
             >
-              <PostCard post={post} />
+              <PostCard post={post} isDraggingRef={isDraggingRef} />
             </motion.div>
           ))}
         </div>
