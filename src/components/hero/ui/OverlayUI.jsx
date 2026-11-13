@@ -75,7 +75,13 @@ export default memo(function OverlayUI({ isLoaded = false }) {
         {isLoaded && (
           <motion.div
             key={animationKey}
-            className={`flex-1 flex flex-col lg:col-span-12 relative z-40 w-full ${
+            className={`flex-1 flex flex-col lg:col-span-12 relative z-40 ${
+              screenContent.layoutVariant === 'stories'
+                ? '-mx-6 sm:-mx-12 md:-mx-16 w-[calc(100%+3rem)] sm:w-[calc(100%+6rem)] md:w-[calc(100%+8rem)]'
+                : screenContent.layoutVariant === 'team'
+                  ? '-mx-6 sm:mx-0 w-[calc(100%+3rem)] sm:w-full'
+                  : 'w-full'
+            } ${
               screenContent.layoutVariant === 'team' || screenContent.layoutVariant === 'stories'
                 ? 'lg:row-start-2 lg:row-span-2 lg:items-start lg:justify-start'
                 : screenContent.layoutVariant === 'split-features'

@@ -94,14 +94,13 @@ function PostCard({ post }) {
       </div>
 
       {/* Card body */}
-      <div className="flex flex-col px-4 pt-4 pb-5 flex-1 justify-center">
+      <div className="flex flex-col px-3.5 pt-3 pb-3.5 sm:px-4 sm:pt-3.5 sm:pb-4 flex-1 justify-center">
         <p
           className="
             font-outfit text-white/70 font-[300] leading-[1.3]
-            text-[min(clamp(0.95rem,4vw,1.1rem),1.9svh)]
-            sm:text-[1.05rem]
-            md:text-[1.15rem]
-            lg:text-[clamp(0.95rem,1.3vw,1.25rem)]
+            text-[min(clamp(0.85rem,3vw,1rem),1.7svh)]
+            sm:text-[0.95rem]
+            lg:text-[clamp(0.85rem,1.1vw,1.05rem)]
             line-clamp-3
           "
           style={{
@@ -131,23 +130,45 @@ function PostCard({ post }) {
 export default memo(function StoriesScreen({ bodyParagraph }) {
   const containerRef = useRef(null)
   const trackRef = useRef(null)
-  const [visibleCount, setVisibleCount] = useState(4)
+  const [visibleCount, setVisibleCount] = useState(posts.length)
+  const [canFitAll, setCanFitAll] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
   const scrollState = useScrollState()
   const isScrollingUp = scrollState?.direction === 'up'
   const { fadeUp, cardVariants } = getVariants(isScrollingUp)
 
-  // Dynamically calculate visible cards depending on viewport width
+  // Dynamically calculate whether all posts fit inside standard page margins,
+  // triggering the slider ONLY when cards actually reach the margin boundaries / overflow.
   const updateLayout = useCallback(() => {
     const width = window.innerWidth
-    if (width < 640) {
-      setVisibleCount(1)
-    } else if (width < 1024) {
-      setVisibleCount(2)
-    } else if (width < 1280) {
-      setVisibleCount(3)
+    // Page margins from OverlayUI: 48px on mobile (<640), 96px on sm (<768), 128px on md+
+    const marginPx = width < 640 ? 48 : width < 768 ? 96 : 128
+    const maxContentWidth = Math.min(width - marginPx, 1320 - marginPx)
+
+    // Minimum comfortable card width before it feels squeezed
+    const minCardWidth = 230
+    const gap = width < 768 ? 16 : 20
+
+    // Width required to display all available posts comfortably within page margins
+    const requiredWidthForAll = posts.length * minCardWidth + (posts.length - 1) * gap
+
+    if (maxContentWidth >= requiredWidthForAll) {
+      // All posts fit within standard margins without touching page edges!
+      setVisibleCount(posts.length)
+      setCanFitAll(true)
     } else {
-      setVisibleCount(4)
+      // Posts overflow! Activate slider and determine how many cards fit centered
+      setCanFitAll(false)
+      if (width < 640) {
+        setVisibleCount(1)
+      } else if (width < 890) {
+        setVisibleCount(2)
+      } else if (width < 1180) {
+        setVisibleCount(3)
+      } else {
+        const count = Math.max(1, Math.floor((width - 120) / (minCardWidth + gap)))
+        setVisibleCount(Math.min(count, posts.length - 1))
+      }
     }
   }, [])
 
@@ -156,10 +177,58 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
     window.addEventListener('resize', updateLayout)
     return () => window.removeEventListener('resize', updateLayout)
   }, [updateLayout])
+  const currentIndexRef = useRef(posts.length)
+  const resumeTimerRef = useRef(null)
 
-  const canFitAll = posts.length <= visibleCount
+  // Duplicated list (3 sets) for seamless infinite circular wrapping
+  const displayPosts = canFitAll ? posts : [...posts, ...posts, ...posts]
 
-  // Circular auto-sliding when total posts exceed visible count on current screen
+  // Dynamic gap based on screen size (16px on mobile/tablet, 20px on desktop)
+  const gapPx = visibleCount >= 3 ? 20 : 16
+
+  // Responsive card width bounded by BOTH horizontal space AND vertical viewport height.
+  // When cards overflow (!canFitAll):
+  // - visibleCount active cards fit in center, with symmetric peeks on left and right edge
+  // - Vertical height is capped with calc(48svh - padding) to ensure square images scale down smoothly on short screens without bottom clipping!
+  const cardWidthStyle = canFitAll
+    ? `min(295px, calc((100% - ${(visibleCount - 1) * gapPx}px) / ${visibleCount}), calc(48svh - 4.8rem))`
+    : visibleCount === 1
+      ? 'min(clamp(240px, calc(100vw - 4.5rem), 335px), calc(48svh - 4.5rem))'
+      : visibleCount === 2
+        ? 'min(clamp(260px, calc((100vw - 7.5rem) / 2), 340px), calc(48svh - 4.5rem))'
+        : visibleCount === 3
+          ? 'min(clamp(250px, calc((100vw - 11rem) / 3), 320px), calc(48svh - 4.8rem))'
+          : `min(clamp(240px, calc((100vw - 14rem) / ${visibleCount}), 300px), calc(48svh - 4.8rem))`
+
+  const scrollDebounceRef = useRef(null)
+
+  // On initial load (when slider is active), center the active cards in Set 2 so Post 4 peeks on the left
+  useEffect(() => {
+    if (canFitAll) return
+    const raf = requestAnimationFrame(() => {
+      const track = trackRef.current
+      if (!track) return
+      const firstChild = track.children[0]
+      if (!firstChild) return
+
+      const style = window.getComputedStyle(track)
+      const gap = parseFloat(style.gap) || 16
+      const cardWidth = firstChild.getBoundingClientRect().width
+      const step = cardWidth + gap
+      const trackWidth = track.clientWidth
+
+      const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
+      const sideMargin = (trackWidth - visibleSpanWidth) / 2
+      const targetScroll = (posts.length * step) - sideMargin
+
+      track.scrollTo({ left: targetScroll, behavior: 'instant' })
+      currentIndexRef.current = posts.length
+    })
+
+    return () => cancelAnimationFrame(raf)
+  }, [canFitAll, visibleCount])
+
+  // Circular auto-sliding when total posts exceed visible count
   useEffect(() => {
     if (canFitAll || isPaused) return
     const track = trackRef.current
@@ -171,24 +240,92 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
 
       const style = window.getComputedStyle(track)
       const gap = parseFloat(style.gap) || 16
-      const step = firstChild.getBoundingClientRect().width + gap
+      const cardWidth = firstChild.getBoundingClientRect().width
+      const step = cardWidth + gap
+      const trackWidth = track.clientWidth
 
-      const maxScroll = track.scrollWidth - track.clientWidth
-      if (track.scrollLeft >= maxScroll - 10) {
-        track.scrollTo({ left: 0, behavior: 'smooth' })
-      } else {
-        track.scrollBy({ left: step, behavior: 'smooth' })
-      }
+      const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
+      const sideMargin = (trackWidth - visibleSpanWidth) / 2
+
+      const nextIndex = currentIndexRef.current + 1
+      const targetScroll = (nextIndex * step) - sideMargin
+      track.scrollTo({ left: targetScroll, behavior: 'smooth' })
+      currentIndexRef.current = nextIndex
+
+      // Silent wrap AFTER smooth scroll animation settles (~650ms), when cards are stationary
+      setTimeout(() => {
+        if (!trackRef.current) return
+        if (currentIndexRef.current >= posts.length * 2) {
+          const wrapIndex = currentIndexRef.current - posts.length
+          const wrapScroll = (wrapIndex * step) - sideMargin
+          trackRef.current.scrollTo({ left: wrapScroll, behavior: 'instant' })
+          currentIndexRef.current = wrapIndex
+        }
+      }, 650)
     }, 3500)
 
     return () => clearInterval(interval)
-  }, [canFitAll, isPaused])
+  }, [canFitAll, isPaused, visibleCount])
 
-  // Duplicated list for continuous circular wrapping when scrolling is active
-  const displayPosts = canFitAll ? posts : [...posts, ...posts, ...posts]
+  // Track manual scroll / swipe to update currentIndex and seamlessly wrap AFTER scrolling stops
+  const handleScroll = useCallback(() => {
+    if (canFitAll) return
+    if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current)
+    scrollDebounceRef.current = setTimeout(() => {
+      const track = trackRef.current
+      if (!track) return
+      const firstChild = track.children[0]
+      if (!firstChild) return
 
-  // Dynamic gap based on screen size (16px on mobile/tablet, 24px on desktop)
-  const gapPx = visibleCount >= 3 ? 24 : 16
+      const style = window.getComputedStyle(track)
+      const gap = parseFloat(style.gap) || 16
+      const cardWidth = firstChild.getBoundingClientRect().width
+      const step = cardWidth + gap
+      const trackWidth = track.clientWidth
+
+      const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
+      const sideMargin = (trackWidth - visibleSpanWidth) / 2
+
+      const scrollLeft = track.scrollLeft
+      const nearestIndex = Math.round((scrollLeft + sideMargin) / step)
+
+      if (nearestIndex < posts.length) {
+        // Swiped backward into Set 1 -> silently jump to Set 2
+        const wrapIndex = nearestIndex + posts.length
+        const wrapScroll = (wrapIndex * step) - sideMargin
+        track.scrollTo({ left: wrapScroll, behavior: 'instant' })
+        currentIndexRef.current = wrapIndex
+      } else if (nearestIndex >= posts.length * 2) {
+        // Swiped forward into Set 3 -> silently jump to Set 2
+        const wrapIndex = nearestIndex - posts.length
+        const wrapScroll = (wrapIndex * step) - sideMargin
+        track.scrollTo({ left: wrapScroll, behavior: 'instant' })
+        currentIndexRef.current = wrapIndex
+      } else {
+        currentIndexRef.current = nearestIndex
+        if (visibleCount > 1) {
+          track.scrollTo({ left: (nearestIndex * step) - sideMargin, behavior: 'smooth' })
+        }
+      }
+    }, 150)
+  }, [canFitAll, visibleCount])
+
+  const handleTouchStart = () => {
+    setIsPaused(true)
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+  }
+
+  const handleTouchEnd = () => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+    resumeTimerRef.current = setTimeout(() => setIsPaused(false), 3000)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+      if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current)
+    }
+  }, [])
 
   return (
     <motion.div
@@ -200,7 +337,7 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
       exit="exit"
     >
       {/* ── Title & Body Paragraph Block ── */}
-      <div className="flex flex-col items-center text-center px-6 shrink-0 mb-[max(5svh,2.5rem)] lg:mb-[max(7svh,4rem)]">
+      <div className="flex flex-col items-center text-center px-6 sm:px-12 md:px-16 shrink-0 mb-[clamp(1rem,3svh,2rem)] lg:mb-[clamp(1.5rem,4svh,2.5rem)]">
         <motion.h1
           variants={fadeUp}
           className="
@@ -246,16 +383,19 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
         )}
       </div>
 
-      {/* ── Dynamic Card Container / Circular Slider ── */}
+      {/* ── Dynamic Card Container / Circular Slider (edge-to-edge when overflowing) ── */}
       <div
-        className="w-full max-w-[1560px] px-4 sm:px-6 lg:px-8 xl:px-12"
+        className={`w-full flex justify-center ${
+          canFitAll ? 'max-w-[1320px] px-6 sm:px-12 md:px-16' : 'px-0 max-w-none'
+        }`}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <div
           ref={trackRef}
+          onScroll={handleScroll}
           className={`
             w-full flex flex-row items-stretch
             pb-3
@@ -266,7 +406,7 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
           `}
           style={{
             gap: `${gapPx}px`,
-            scrollSnapType: canFitAll ? 'none' : 'x mandatory',
+            scrollSnapType: canFitAll ? 'none' : (visibleCount === 1 ? 'x mandatory' : 'none'),
             WebkitOverflowScrolling: 'touch',
           }}
         >
@@ -275,10 +415,10 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
               key={`${post.id}-${i}`}
               custom={i}
               variants={cardVariants}
-              className="shrink-0 h-full"
+              className="shrink-0 h-full flex flex-col"
               style={{
-                width: `calc((100% - ${(visibleCount - 1) * gapPx}px) / ${visibleCount})`,
-                scrollSnapAlign: canFitAll ? 'none' : 'start',
+                width: cardWidthStyle,
+                scrollSnapAlign: canFitAll ? 'none' : (visibleCount === 1 ? 'center' : 'none'),
               }}
             >
               <PostCard post={post} />
