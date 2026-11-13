@@ -216,6 +216,24 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
           : `min(clamp(240px, calc((100vw - 14rem) / ${visibleCount}), 300px), calc(48svh - 4.8rem))`
 
   const scrollDebounceRef = useRef(null)
+  const isAnimatingRef = useRef(false)
+  const wrapTimerRef = useRef(null)
+
+  // Pixel-perfect target scroll calculation using actual card offsetLeft
+  const getTargetScroll = useCallback((idx) => {
+    const track = trackRef.current
+    if (!track) return 0
+    const card = track.children[idx]
+    if (!card) return 0
+
+    const style = window.getComputedStyle(track)
+    const gap = parseFloat(style.gap) || 16
+    const cardWidth = card.getBoundingClientRect().width
+    const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
+    const sideMargin = (track.clientWidth - visibleSpanWidth) / 2
+
+    return card.offsetLeft - sideMargin
+  }, [visibleCount])
 
   // On initial load (when slider is active), center the active cards in Set 2 so Post 4 peeks on the left
   useEffect(() => {
@@ -223,25 +241,12 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
     const raf = requestAnimationFrame(() => {
       const track = trackRef.current
       if (!track) return
-      const firstChild = track.children[0]
-      if (!firstChild) return
-
-      const style = window.getComputedStyle(track)
-      const gap = parseFloat(style.gap) || 16
-      const cardWidth = firstChild.getBoundingClientRect().width
-      const step = cardWidth + gap
-      const trackWidth = track.clientWidth
-
-      const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
-      const sideMargin = (trackWidth - visibleSpanWidth) / 2
-      const targetScroll = (posts.length * step) - sideMargin
-
-      track.scrollTo({ left: targetScroll, behavior: 'instant' })
+      track.scrollTo({ left: getTargetScroll(posts.length), behavior: 'instant' })
       currentIndexRef.current = posts.length
     })
 
     return () => cancelAnimationFrame(raf)
-  }, [canFitAll, visibleCount])
+  }, [canFitAll, visibleCount, getTargetScroll])
 
   // Circular auto-sliding when total posts exceed visible count
   useEffect(() => {
@@ -250,51 +255,40 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
     if (!track) return
 
     const interval = setInterval(() => {
-      const firstChild = track.children[0]
-      if (!firstChild) return
-
-      const style = window.getComputedStyle(track)
-      const gap = parseFloat(style.gap) || 16
-      const cardWidth = firstChild.getBoundingClientRect().width
-      const step = cardWidth + gap
-      const trackWidth = track.clientWidth
-
-      const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
-      const sideMargin = (trackWidth - visibleSpanWidth) / 2
-
+      if (isAnimatingRef.current) return
       const nextIndex = currentIndexRef.current + 1
-      const targetScroll = (nextIndex * step) - sideMargin
-      track.scrollTo({ left: targetScroll, behavior: 'smooth' })
+
+      isAnimatingRef.current = true
+      track.scrollTo({ left: getTargetScroll(nextIndex), behavior: 'smooth' })
       currentIndexRef.current = nextIndex
 
-      // Silent wrap AFTER smooth scroll animation settles (~650ms), when cards are stationary
-      setTimeout(() => {
+      if (wrapTimerRef.current) clearTimeout(wrapTimerRef.current)
+      wrapTimerRef.current = setTimeout(() => {
         if (!trackRef.current) return
         if (currentIndexRef.current >= posts.length * 2) {
           const wrapIndex = currentIndexRef.current - posts.length
-          const wrapScroll = (wrapIndex * step) - sideMargin
-          trackRef.current.scrollTo({ left: wrapScroll, behavior: 'instant' })
+          trackRef.current.scrollTo({ left: getTargetScroll(wrapIndex), behavior: 'instant' })
           currentIndexRef.current = wrapIndex
         }
-      }, 650)
+        isAnimatingRef.current = false
+      }, 550)
     }, 3500)
 
     return () => clearInterval(interval)
-  }, [canFitAll, isPaused, visibleCount])
+  }, [canFitAll, isPaused, visibleCount, getTargetScroll])
 
-  // Track manual scroll / swipe to update currentIndex and seamlessly wrap AFTER scrolling stops
+  // Track manual trackpad/desktop scroll to silently wrap AFTER scrolling stops
   const handleScroll = useCallback(() => {
-    if (canFitAll) return
+    if (canFitAll || isAnimatingRef.current) return
     if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current)
     scrollDebounceRef.current = setTimeout(() => {
+      if (isAnimatingRef.current) return
       const track = trackRef.current
-      if (!track) return
-      const firstChild = track.children[0]
-      if (!firstChild) return
+      if (!track || !track.children[0]) return
 
       const style = window.getComputedStyle(track)
       const gap = parseFloat(style.gap) || 16
-      const cardWidth = firstChild.getBoundingClientRect().width
+      const cardWidth = track.children[0].getBoundingClientRect().width
       const step = cardWidth + gap
       const trackWidth = track.clientWidth
 
@@ -305,25 +299,21 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
       const nearestIndex = Math.round((scrollLeft + sideMargin) / step)
 
       if (nearestIndex < posts.length) {
-        // Swiped backward into Set 1 -> silently jump to Set 2
         const wrapIndex = nearestIndex + posts.length
-        const wrapScroll = (wrapIndex * step) - sideMargin
-        track.scrollTo({ left: wrapScroll, behavior: 'instant' })
+        track.scrollTo({ left: getTargetScroll(wrapIndex), behavior: 'instant' })
         currentIndexRef.current = wrapIndex
       } else if (nearestIndex >= posts.length * 2) {
-        // Swiped forward into Set 3 -> silently jump to Set 2
         const wrapIndex = nearestIndex - posts.length
-        const wrapScroll = (wrapIndex * step) - sideMargin
-        track.scrollTo({ left: wrapScroll, behavior: 'instant' })
+        track.scrollTo({ left: getTargetScroll(wrapIndex), behavior: 'instant' })
         currentIndexRef.current = wrapIndex
       } else {
         currentIndexRef.current = nearestIndex
         if (visibleCount > 1) {
-          track.scrollTo({ left: (nearestIndex * step) - sideMargin, behavior: 'smooth' })
+          track.scrollTo({ left: getTargetScroll(nearestIndex), behavior: 'smooth' })
         }
       }
-    }, 150)
-  }, [canFitAll, visibleCount])
+    }, 250)
+  }, [canFitAll, visibleCount, getTargetScroll])
 
   const touchStartPos = useRef({ x: 0, y: 0, time: 0 })
   const isDraggingRef = useRef(false)
@@ -332,6 +322,23 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
   const handleTouchStart = (e) => {
     setIsPaused(true)
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+    if (wrapTimerRef.current) clearTimeout(wrapTimerRef.current)
+
+    // Settle any pending wrap instantly before new touch interaction begins
+    const track = trackRef.current
+    if (track) {
+      if (currentIndexRef.current >= posts.length * 2) {
+        const normalizedIndex = currentIndexRef.current - posts.length
+        track.scrollTo({ left: getTargetScroll(normalizedIndex), behavior: 'instant' })
+        currentIndexRef.current = normalizedIndex
+      } else if (currentIndexRef.current < posts.length) {
+        const normalizedIndex = currentIndexRef.current + posts.length
+        track.scrollTo({ left: getTargetScroll(normalizedIndex), behavior: 'instant' })
+        currentIndexRef.current = normalizedIndex
+      }
+    }
+    isAnimatingRef.current = false
+
     if (e.touches && e.touches[0]) {
       touchStartPos.current = {
         x: e.touches[0].clientX,
@@ -364,51 +371,41 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
     }
 
     const touch = e.changedTouches ? e.changedTouches[0] : null
-    if (touch && isSwipingTouchRef.current) {
+    const track = trackRef.current
+
+    if (touch && isSwipingTouchRef.current && track) {
       const dx = touch.clientX - touchStartPos.current.x
-      const track = trackRef.current
-      if (track) {
-        const firstChild = track.children[0]
-        if (firstChild) {
-          const style = window.getComputedStyle(track)
-          const gap = parseFloat(style.gap) || 16
-          const cardWidth = firstChild.getBoundingClientRect().width
-          const step = cardWidth + gap
-          const trackWidth = track.clientWidth
+      const dt = Date.now() - touchStartPos.current.time
+      const velocity = Math.abs(dx) / (dt || 1)
 
-          const visibleSpanWidth = visibleCount * cardWidth + (visibleCount - 1) * gap
-          const sideMargin = (trackWidth - visibleSpanWidth) / 2
-
-          // If swiped left by > 30px -> slide to next card
-          // If swiped right by > 30px -> slide to previous card
-          let targetIndex = currentIndexRef.current
-          if (dx < -30) {
-            targetIndex = currentIndexRef.current + 1
-          } else if (dx > 30) {
-            targetIndex = currentIndexRef.current - 1
-          }
-
-          const targetScroll = (targetIndex * step) - sideMargin
-          track.scrollTo({ left: targetScroll, behavior: 'smooth' })
-          currentIndexRef.current = targetIndex
-
-          // Silent wrap after smooth scroll animation settles
-          setTimeout(() => {
-            if (!trackRef.current) return
-            if (currentIndexRef.current >= posts.length * 2) {
-              const wrapIndex = currentIndexRef.current - posts.length
-              const wrapScroll = (wrapIndex * step) - sideMargin
-              trackRef.current.scrollTo({ left: wrapScroll, behavior: 'instant' })
-              currentIndexRef.current = wrapIndex
-            } else if (currentIndexRef.current < posts.length) {
-              const wrapIndex = currentIndexRef.current + posts.length
-              const wrapScroll = (wrapIndex * step) - sideMargin
-              trackRef.current.scrollTo({ left: wrapScroll, behavior: 'instant' })
-              currentIndexRef.current = wrapIndex
-            }
-          }, 650)
-        }
+      // If swiped left by > 25px or flicked -> slide forward
+      // If swiped right by > 25px or flicked -> slide backward
+      let targetIndex = currentIndexRef.current
+      if (dx < -25 || (dx < -15 && velocity > 0.25)) {
+        targetIndex = currentIndexRef.current + 1
+      } else if (dx > 25 || (dx > 15 && velocity > 0.25)) {
+        targetIndex = currentIndexRef.current - 1
       }
+
+      isAnimatingRef.current = true
+      track.scrollTo({ left: getTargetScroll(targetIndex), behavior: 'smooth' })
+      currentIndexRef.current = targetIndex
+
+      // Silent wrap AFTER smooth scroll animation settles (~550ms), when cards are stationary
+      if (wrapTimerRef.current) clearTimeout(wrapTimerRef.current)
+      wrapTimerRef.current = setTimeout(() => {
+        if (!trackRef.current) return
+        if (currentIndexRef.current >= posts.length * 2) {
+          const wrapIndex = currentIndexRef.current - posts.length
+          trackRef.current.scrollTo({ left: getTargetScroll(wrapIndex), behavior: 'instant' })
+          currentIndexRef.current = wrapIndex
+        } else if (currentIndexRef.current < posts.length) {
+          const wrapIndex = currentIndexRef.current + posts.length
+          trackRef.current.scrollTo({ left: getTargetScroll(wrapIndex), behavior: 'instant' })
+          currentIndexRef.current = wrapIndex
+        }
+        isAnimatingRef.current = false
+      }, 550)
     }
 
     // Keep dragging flag for 150ms so onClick on <a> does not fire when swiping
@@ -425,6 +422,7 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
     return () => {
       if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
       if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current)
+      if (wrapTimerRef.current) clearTimeout(wrapTimerRef.current)
     }
   }, [])
 
@@ -499,7 +497,7 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
           ref={trackRef}
           onScroll={handleScroll}
           className={`
-            w-full flex flex-row items-stretch pointer-events-auto touch-pan-x select-none
+            relative w-full flex flex-row items-stretch pointer-events-auto touch-pan-x select-none
             pb-3
             ${canFitAll
               ? 'justify-center overflow-x-hidden'
@@ -508,7 +506,7 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
           `}
           style={{
             gap: `${gapPx}px`,
-            scrollSnapType: canFitAll ? 'none' : (visibleCount === 1 ? 'x mandatory' : 'none'),
+            scrollSnapType: 'none',
             WebkitOverflowScrolling: 'touch',
             touchAction: canFitAll ? 'auto' : 'pan-x',
           }}
@@ -521,7 +519,6 @@ export default memo(function StoriesScreen({ bodyParagraph }) {
               className="shrink-0 h-full flex flex-col pointer-events-auto select-none"
               style={{
                 width: cardWidthStyle,
-                scrollSnapAlign: canFitAll ? 'none' : (visibleCount === 1 ? 'center' : 'none'),
               }}
             >
               <PostCard post={post} isDraggingRef={isDraggingRef} />
