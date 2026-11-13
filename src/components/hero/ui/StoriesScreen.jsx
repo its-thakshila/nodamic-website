@@ -79,10 +79,10 @@ function PostCard({ post, isDraggingRef }) {
       className="
         group relative flex flex-col w-full h-full pointer-events-auto select-none
         rounded-2xl overflow-hidden
-        bg-white/[0.04]
-        hover:bg-white/[0.07]
-        transition-all duration-500 ease-out
-        hover:-translate-y-1
+        border border-white/[0.07] hover:border-white/[0.18]
+        bg-white/[0.035] hover:bg-white/[0.065]
+        hover:shadow-[0_12px_36px_-10px_rgba(0,0,0,0.8),0_0_24px_-4px_rgba(255,255,255,0.05)]
+        transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
         cursor-pointer
       "
       style={{
@@ -95,14 +95,18 @@ function PostCard({ post, isDraggingRef }) {
       {/* Image area: Square ratio (aspect-square) */}
       <div className="relative w-full aspect-square overflow-hidden bg-white/5 shrink-0">
         {post.image ? (
-          <img
-            src={`${import.meta.env.BASE_URL}${post.image.replace(/^\//, '')}`}
-            alt={post.title || 'Story'}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            draggable={false}
-            loading="eager"
-            decoding="async"
-          />
+          <>
+            <img
+              src={`${import.meta.env.BASE_URL}${post.image.replace(/^\//, '')}`}
+              alt={post.title || 'Story'}
+              className="w-full h-full object-cover transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.025] group-hover:brightness-[1.04]"
+              draggable={false}
+              loading="eager"
+              decoding="async"
+            />
+            {/* Subtle soft gradient transition to card body */}
+            <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+          </>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/[0.03]" />
         )}
@@ -112,11 +116,12 @@ function PostCard({ post, isDraggingRef }) {
       <div className="flex flex-col px-3.5 pt-3 pb-3.5 sm:px-4 sm:pt-3.5 sm:pb-4 flex-1 justify-center">
         <p
           className="
-            font-outfit text-white/70 font-[300] leading-[1.3]
+            font-outfit text-white/70 group-hover:text-white/95 font-[300] leading-[1.3]
             text-[min(clamp(0.85rem,3vw,1rem),1.7svh)]
             sm:text-[0.95rem]
             lg:text-[clamp(0.85rem,1.1vw,1.05rem)]
             line-clamp-3
+            transition-colors duration-400 ease-out
           "
           style={{
             display: '-webkit-box',
